@@ -1,0 +1,37 @@
+[package]
+name = "tauri-app"
+version = "0.0.1"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.57"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# https://docs.rs/tensorflow/0.19.1/tensorflow/
+
+[build-dependencies]
+tauri-build = {version = "1.2", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+sqlite = "0.30.2"
+serde = { version = "1.0", features = ["derive"] }
+tauri = {version = "1.2", features = ["api-all"] }
+#tensorflow = { version = "0.19.1" }
+#tensorflow-sys = { version = "0.22.1", features = ["tensorflow_gpu"] }
+#tensorflow = { version = "0.19.1", features = ["tensorflow_gpu"] }
+#tensorflow-sys = "0.22.1"
+
+[workspace]
+members = ["modules"]
+
+[features]
+# by default Tauri runs in production mode
+# when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is an URL
+default = [ "custom-protocol" ]
+# this feature is used used for production builds where `devPath` points to the filesystem
+# DO NOT remove this
+custom-protocol = [ "tauri/custom-protocol" ]
