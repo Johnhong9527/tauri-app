@@ -24,6 +24,8 @@ tauri = {version = "1.2", features = ["api-all"] }
 #tensorflow-sys = { version = "0.22.1", features = ["tensorflow_gpu"] }
 #tensorflow = { version = "0.19.1", features = ["tensorflow_gpu"] }
 #tensorflow-sys = "0.22.1"
+uuid = "1.2.2"
+regex = "1.7.0"
 
 [workspace]
 members = ["modules"]

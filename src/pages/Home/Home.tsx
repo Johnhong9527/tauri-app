@@ -1,4 +1,4 @@
-import {useState, useCallback} from "react";
+import {useState, useCallback, useEffect} from "react";
 import reactLogo from "../../assets/react.svg";
 import {invoke} from "@tauri-apps/api/tauri";
 // import {createDir, BaseDirectory} from '@tauri-apps/api/fs';
@@ -11,6 +11,14 @@ function Home() {
   const [name, setName] = useState("");
   const [filePath, setFilePath] = useState("");
 
+  useEffect(() => {
+    init();
+  }, [])
+
+  async function init() {
+    const files = await invoke('file_path', {name: '/'})
+    console.log(20, files);
+  }
   // const inputOther:InputHTMLAttributes
 
   async function greet() {

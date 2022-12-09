@@ -2680,11 +2680,13 @@ dependencies = [
 name = "tauri-app"
 version = "0.0.1"
 dependencies = [
+ "regex",
  "serde",
  "serde_json",
  "sqlite",
  "tauri",
  "tauri-build",
+ "uuid 1.2.2",
 ]
 
 [[package]]
