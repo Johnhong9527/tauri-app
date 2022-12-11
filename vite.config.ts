@@ -2,15 +2,20 @@ import {defineConfig} from "vite";
 import path from 'node:path'
 import react from "@vitejs/plugin-react";
 import alias from '@rollup/plugin-alias';
+import vitePluginForArco from '@arco-plugins/vite-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(),alias({
+  plugins: [
+    react(),
+    alias({
     entries: [
       { find: '@', replacement: './src' },
       // { find: 'batman-1.0.0', replacement: './joker-1.5.0' }
     ]
-  })],
+  }),
+
+  ],
   css: {
     //* css模块化
     modules: { // css模块化 文件以.module.[css|less|scss]结尾

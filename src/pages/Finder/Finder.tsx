@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {invoke} from "@tauri-apps/api/tauri";
 // import {file} from "@tauri-apps/api/tauri";
-
+import { Button, Space } from 'antd';
 import { open, message } from '@tauri-apps/api/dialog';
 import { tauri } from "@tauri-apps/api";
 // import { appDataDir } from '@tauri-apps/api/path';
@@ -20,9 +20,9 @@ export default function Finder() {
 		//   multiple: true,
 		//   defaultPath: await appDataDir(),
 		});
-		
+
 		if (Array.isArray(selected)) {
-			setSelectPath(selected.toString());	
+			setSelectPath(selected.toString());
 		  // user selected multiple directories
 		} else if (selected === null) {
 		  // user cancelled the selection
@@ -41,6 +41,14 @@ export default function Finder() {
 
 	return (
 		<div>
+			<Space wrap>
+				<Button type="primary">Primary Button</Button>
+				<Button>Default Button</Button>
+				<Button type="dashed">Dashed Button</Button>
+				<Button type="text">Text Button</Button>
+				<Button type="link">Link Button</Button>
+			</Space>
+
 			<div>finder</div>
 			<button onClick={() => selectDirectory()}>run</button>
 			<div>selectPath:</div>

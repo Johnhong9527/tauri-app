@@ -28,7 +28,7 @@ uuid = "1.2.2"
 regex = "1.7.0"
 
 [workspace]
-members = ["modules"]
+#members = ["modules"]
 
 [features]
 # by default Tauri runs in production mode
