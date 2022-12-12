@@ -81,7 +81,7 @@ use std::{fs, io};
 #[derive(Debug)]
 struct UseHashInfoStruct {
     path: String,
-    processed: u64,
+    processed: String,
     hash: String,
 }
 
@@ -97,14 +97,15 @@ fn get_file_hase(path: &str) -> UseHashInfoStruct {
     // println!("Hash value: {}", hash_str);
     let info = UseHashInfoStruct {
         path: file_path.to_string(),
-        processed: n,
+        processed: format!("{:x}", n),
         hash: hash_str,
     };
     info
 }
 
 #[tauri::command(name = "file_sort")]
-pub fn file_sort(path: &str) {
-    let hash_info: UseHashInfoStruct = get_file_hase(&path);
-    println!("{:?}", hash_info)
+pub fn file_sort(path: &str) -> String {
+    let hash_info = get_file_hase(&path);
+    println!("{:?}", hash_info.path);
+    format!("{{ 'path': {},'processed': {},'hash': {} }}`", hash_info.path, hash_info.processed, hash_info.hash)
 }
