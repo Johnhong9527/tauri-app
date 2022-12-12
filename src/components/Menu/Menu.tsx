@@ -9,7 +9,6 @@ export default function Menu() {
   useEffect(() => {
     initMenu();
   }, []);
-  const [height, setHeight] = useState<number | string>(0);
 
   async function initMenu() {
     // const config = LogicalSize;
@@ -22,7 +21,12 @@ export default function Menu() {
       label: "常用",
       child: [
         {
+          label: "文件整理",
+          path: "/file-sort",
+        },
+        {
           label: "文件清理",
+          path: "/file-clear",
         },
         {
           label: "重复文件",

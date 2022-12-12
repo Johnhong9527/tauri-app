@@ -9,8 +9,17 @@
     background-color: white;
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
-    height: 100vh;
-    overflow-y: scroll;
     flex: 1;
+
+    .scrollY {
+      height: calc(100vh - 64px);
+      overflow-y: scroll;
+    }
+  }
+  .placeholder {
+    font-size: 30px;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 3px 0 4px 0 #666666;
   }
 }
