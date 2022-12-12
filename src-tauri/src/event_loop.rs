@@ -1,5 +1,3 @@
-
-
 // 这里先放基础类型数据，如果不够的话再按模块拆分
 #[tauri::command(name = "greet")]
 pub fn greet(name: &str) -> String {
@@ -14,13 +12,13 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     // #[macro_use]
     // extern crate lazy_static;
     extern crate regex;
-    use std::path::Path;
     use crate::files::file_sqlite3::file_sqlite3::{inset, is_create};
     use crate::files::file_struct::File;
+    use std::path::Path;
     use std::time::SystemTime;
     // 生成 UUID
     let uuid = Uuid::new_v4();
-   
+
     let err = is_create("files");
     println!("2424  {}", err);
     // let parent = "".to_string();
@@ -33,7 +31,7 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     let timestamp = system_time
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("Failed to get timestamp");
-        
+
     let filepath = Path::new(name);
     // 获取路径的最后一个部分（即用户名）
     let filename: String = filepath.file_name().unwrap().to_str().unwrap().to_string();
@@ -75,4 +73,38 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     // // println!("Message from Rust: {}", res);
     res
     // "files"
+}
+
+use sha2::{Digest, Sha256};
+use std::{fs, io};
+
+#[derive(Debug)]
+struct UseHashInfoStruct {
+    path: String,
+    processed: u64,
+    hash: String,
+}
+
+fn get_file_hase(path: &str) -> UseHashInfoStruct {
+    let file_path = path;
+    let mut file = fs::File::open(&path).unwrap();
+    let mut hasher = Sha256::new();
+    let n = io::copy(&mut file, &mut hasher).unwrap();
+    let hash = hasher.finalize();
+    let hash_str = format!("{:x}", hash);
+    // println!("Path: {}", path);
+    // println!("Bytes processed: {}", n);
+    // println!("Hash value: {}", hash_str);
+    let info = UseHashInfoStruct {
+        path: file_path.to_string(),
+        processed: n,
+        hash: hash_str,
+    };
+    info
+}
+
+#[tauri::command(name = "file_sort")]
+pub fn file_sort(path: &str) {
+    let hash_info: UseHashInfoStruct = get_file_hase(&path);
+    println!("{:?}", hash_info)
 }

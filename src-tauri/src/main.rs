@@ -4,9 +4,10 @@ mod files;
 // use crate::files::{file_struct, file_tools};
 mod menus;
 mod event_loop;
+
 use crate::menus::default::use_memu;
 use crate::menus::event::m_event;
-use crate::event_loop::{greet, file_path};
+use crate::event_loop::{greet, file_path, file_sort};
 
 
 fn main() {
@@ -16,7 +17,7 @@ fn main() {
             // 处理菜单事件
             m_event(event);
         })
-        .invoke_handler(tauri::generate_handler![greet, file_path])
+        .invoke_handler(tauri::generate_handler![greet, file_path, file_sort])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
