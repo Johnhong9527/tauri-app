@@ -4,10 +4,25 @@
     padding: 30px 0;
     font-size: 20px;
     text-align: center;
-    //height: 60px;
   }
   .menuBox {
     .label {
+      padding: 5px 10px 5px 10px;
+      //margin-bottom: 5px;
+    }
+    .childItemLabel {
+      padding: 5px 10px 5px 10px;
+      margin-bottom: 5px;
+      transition: background-color ease-in-out 150ms;
+      border-radius: 3px;
+      &:hover {
+        background-color: #f0f0f0;
+        cursor: pointer;
+        //box-shadow: -1px 0 2px 1px #efbe61 inset;
+      }
+      &.active {
+        background-color: #c1dffc;
+      }
     }
   }
 
