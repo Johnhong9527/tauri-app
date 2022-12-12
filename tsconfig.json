@@ -16,7 +16,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "clsx": [
+        "./src/types/clsx.d.ts"
+      ]
     }
   },
   "include": ["src"],

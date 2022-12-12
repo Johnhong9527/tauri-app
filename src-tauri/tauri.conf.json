@@ -6,18 +6,13 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "tauri-app",
+    "productName": "System Tools",
     "version": "0.0.1"
   },
 
   "tauri": {
     "allowlist": {
-      "all": true,
-      "dialog": {
-        "all": true, 
-        "open": true,
-        "save": true
-      }
+      "all": true
     },
     "bundle": {
       "active": true,
@@ -61,10 +56,12 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 735,
         "resizable": true,
         "title": "System Tools",
-        "width": 800
+        "width": 1150,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay"
       }
     ]
   }

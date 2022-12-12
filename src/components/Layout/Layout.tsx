@@ -2,16 +2,20 @@ import * as React from "react";
 import {Routes, Route, Outlet, Link, useNavigate} from "react-router-dom";
 import styles from './Layout.module.less'
 // 监听 tauri 事件
-import { listen, Event as TauriEvent, UnlistenFn } from "@tauri-apps/api/event";
+import {listen, Event as TauriEvent, UnlistenFn} from "@tauri-apps/api/event";
+import Menu from '../Menu/Menu'
 
 export default function Layout() {
   let navigate = useNavigate();
+
   function handleErr(msg: string) {
     console.log(msg)
   }
+
   function handleSuc(msg: string) {
     console.log(msg)
   }
+
   React.useEffect(() => {
     const unListen: UnlistenFn[] = [];
     listen("routing", (e: TauriEvent<string>) => {
@@ -40,7 +44,8 @@ export default function Layout() {
       .then((ulf) => {
         unListen.push(ulf);
       })
-      .catch(() => {});
+      .catch(() => {
+      });
 
     return () => {
       for (const ulf of unListen) ulf();
@@ -49,7 +54,12 @@ export default function Layout() {
   }, [])
   return (
     <div className={styles.box}>
-      <Outlet />
+      <div className={styles.menuBox}>
+        <Menu></Menu>
+      </div>
+      <div className={styles.content}>
+        <Outlet/>
+      </div>
     </div>
   )
 }
