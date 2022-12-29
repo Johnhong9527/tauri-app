@@ -32,6 +32,9 @@ data-encoding = "2.3.3"
 sha2 = "0.10"
 digest = "0.10.6"
 hex = "0.4.3"
+file_diff = "1.0.0"
+strsim = "0.10.0"
+diff = "0.1"
 
 [workspace]
 #members = ["modules"]

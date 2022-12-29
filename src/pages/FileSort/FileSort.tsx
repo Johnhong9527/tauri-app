@@ -11,7 +11,8 @@ export default function FileSort() {
       multiple: false,
       //   defaultPath: await appDataDir(),
     });
-    setFile([...fileStr, await invoke("file_sort", { path: selected })]);
+    await invoke("file_sort", { path: selected });
+    // setFile([...fileStr, await invoke("file_sort", { path: selected })]);
   }
   return (
     <div className={styles.FileSortBox}>
