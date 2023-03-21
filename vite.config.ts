@@ -16,6 +16,11 @@ export default defineConfig({
   }),
 
   ],
+  resolve:{
+    alias:{
+      '@': '/src',
+    }
+  },
   css: {
     //* css模块化
     modules: { // css模块化 文件以.module.[css|less|scss]结尾
