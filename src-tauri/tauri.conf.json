@@ -59,9 +59,7 @@
         "height": 735,
         "resizable": true,
         "title": "System Tools",
-        "width": 1150,
-        "hiddenTitle": true,
-        "titleBarStyle": "Overlay"
+        "width": 1150
       }
     ]
   }
