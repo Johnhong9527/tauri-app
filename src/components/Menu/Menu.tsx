@@ -30,6 +30,7 @@ export default function Menu() {
         },
         {
           label: "重复文件",
+          path: "/duplicateFile",
         },
       ],
     },

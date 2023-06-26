@@ -24,3 +24,6 @@ This template should help get you started developing with Tauri, React and Types
       }
     ]
 ```
+
+### 设计
+1、所有的状态存放本地 sqlite

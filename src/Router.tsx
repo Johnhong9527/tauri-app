@@ -7,6 +7,7 @@ import Finder from "@/pages/Finder/Finder";
 import Setting from "@/pages/Setting/Setting";
 import FileSort from "@/pages/FileSort/FileSort";
 import FileClear from "@/pages/FileClear/FileClear";
+import DuplicateFile from "@/pages/DuplicateFile/DuplicateFile";
 export default function Router() {
   return (
     <Routes>
@@ -18,6 +19,7 @@ export default function Router() {
         <Route path={"home"} element={<Home />} />
         <Route path={"file-sort"} element={<FileSort />} />
         <Route path={"file-clear"} element={<FileClear />} />
+        <Route path={"duplicateFile"} element={<DuplicateFile />} />
         {/*<Route index element={<Home />} />*/}
       </Route>
     </Routes>

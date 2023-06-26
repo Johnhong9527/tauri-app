@@ -1,5 +1,5 @@
 use tauri::{WindowMenuEvent, Wry};
-use crate::files::{file_struct, file_tools};
+// use crate::files::{file_struct, file_tools};
 
 pub fn m_event(event: WindowMenuEvent<Wry>) {
     match event.menu_item_id() {
@@ -20,8 +20,8 @@ pub fn m_event(event: WindowMenuEvent<Wry>) {
             // println!("Message from Rust: {}", "close");
             // event.window().close().unwrap();
             // FileStruct::{Site};
-            let base: file_struct::Site = file_tools::file_tools::get_base_path();
-            println!("65:  {:?}", base);
+            // let base: file_struct::Site = file_tools::file_tools::get_base_path();
+            // println!("65:  {:?}", base);
 
             // 切换页面
             let window = event.window().clone();

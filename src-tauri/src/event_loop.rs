@@ -12,15 +12,15 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     // #[macro_use]
     // extern crate lazy_static;
     extern crate regex;
-    use crate::files::file_sqlite3::file_sqlite3::{inset, is_create};
-    use crate::files::file_struct::File;
+    // use crate::files::file_sqlite3::file_sqlite3::{inset, is_create};
+    // use crate::files::file_struct::File;
     use std::path::Path;
     use std::time::SystemTime;
     // 生成 UUID
     let uuid = Uuid::new_v4();
 
-    let err = is_create("files");
-    println!("2424  {}", err);
+    // let err = is_create("files");
+    // println!("2424  {}", err);
     // let parent = "".to_string();
     // let mut parent_id: String = "".to_string();
     // if parentid.len() > 0 {
@@ -36,19 +36,19 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     // 获取路径的最后一个部分（即用户名）
     let filename: String = filepath.file_name().unwrap().to_str().unwrap().to_string();
     println!("38383838383 {}, {}", filename, parentid);
-    let file = File {
-        name: filename.to_string(),
-        path: name.to_string(),
-        history_path: name.to_string(),
-        uuid: uuid.to_string(),
-        parent_id: parentid.to_string(),
-        create_time: timestamp,
-        update_time: timestamp,
-        file_type: name.to_string(),
-        user: name.to_string(),
-        rule: name.to_string(),
-    };
-    inset(file);
+    // let file = File {
+    //     name: filename.to_string(),
+    //     path: name.to_string(),
+    //     history_path: name.to_string(),
+    //     uuid: uuid.to_string(),
+    //     parent_id: parentid.to_string(),
+    //     create_time: timestamp,
+    //     update_time: timestamp,
+    //     file_type: name.to_string(),
+    //     user: name.to_string(),
+    //     rule: name.to_string(),
+    // };
+    // inset(file);
 
     // 获取当前目录中的文件和目录
     // let entries = fs::read_dir(name).unwrap();
