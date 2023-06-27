@@ -8,15 +8,18 @@ mod self_plugin;
 mod common;
 mod utils;
 
+
 use crate::menus::default::use_memu;
 use crate::menus::event::m_event;
 use crate::event_loop::{greet, file_path, file_sort};
-use crate::self_plugin::tauri_plugin_sqlite;
+use self_plugin::tauri_plugin_sqlite;
+use self_plugin::tauri_plugin_file;
 
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_sqlite::init())
+        .plugin(tauri_plugin_file::init())
         .menu(use_memu())
         .on_menu_event(|event| {
             // 处理菜单事件

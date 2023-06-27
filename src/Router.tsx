@@ -12,7 +12,7 @@ export default function Router() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<FileSort />} />
+        <Route index element={<DuplicateFile />} />
         <Route path={"about"} element={<About />} />
         <Route path={"finder"} element={<Finder />} />
         <Route path={"setting"} element={<Setting />} />

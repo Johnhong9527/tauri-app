@@ -4,9 +4,8 @@ use tauri::command;
 
 use serde::{Serialize, Serializer};
 use serde_json::Value as JsonValue;
-// use tauri_app::rrai_desktop_sdk_common;
 
-use crate::common as rrai_desktop_sdk_common;
+use crate::common as st_common;
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
@@ -36,7 +35,7 @@ type Result<T> = std::result::Result<T, Error>;
 
 #[command]
 pub async fn open(path: String) -> Result<bool> {
-    rrai_desktop_sdk_common::sqlite::open(&path).await?;
+    st_common::sqlite::open(&path).await?;
     Ok(true)
 }
 
@@ -44,31 +43,31 @@ pub async fn open(path: String) -> Result<bool> {
 pub async fn open_with_flags(path: String, iflags: i32) -> Result<bool> {
     let flags = OpenFlags::default();
 
-    rrai_desktop_sdk_common::sqlite::open_with_flags(&path, flags).await?;
+    st_common::sqlite::open_with_flags(&path, flags).await?;
     Ok(true)
 }
 
 #[command]
 pub async fn close(path: String) -> Result<bool> {
-    rrai_desktop_sdk_common::sqlite::close(&path).await?;
+    st_common::sqlite::close(&path).await?;
     Ok(true)
 }
 
 #[command]
 pub async fn execute_sql(path: String, sql: String) -> Result<usize> {
-    let res = rrai_desktop_sdk_common::sqlite::execute_sql(&path, &sql).await?;
+    let res = st_common::sqlite::execute_sql(&path, &sql).await?;
     Ok(res)
 }
 
 #[command]
 pub async fn execute_batch(path: String, sql: String) -> Result<bool> {
-    let res = rrai_desktop_sdk_common::sqlite::execute_batch(&path, &sql).await?;
+    let res = st_common::sqlite::execute_batch(&path, &sql).await?;
     Ok(res)
 }
 
 #[command]
 pub async fn execute(path: String, sql: String, args: JsonValue) -> Result<usize> {
-    let res = rrai_desktop_sdk_common::sqlite::execute(&path, &sql, &args).await?;
+    let res = st_common::sqlite::execute(&path, &sql, &args).await?;
     Ok(res)
 }
 
@@ -78,6 +77,6 @@ pub async fn query_with_args(
     sql: String,
     args: JsonValue,
 ) -> Result<Vec<HashMap<String, JsonValue>>> {
-    let res = rrai_desktop_sdk_common::sqlite::query_with_args(&path, &sql, &args).await?;
+    let res = st_common::sqlite::query_with_args(&path, &sql, &args).await?;
     Ok(res)
 }
