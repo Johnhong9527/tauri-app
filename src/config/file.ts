@@ -1,0 +1,1 @@
+export const FILE_DB_PATH = 'files.db'

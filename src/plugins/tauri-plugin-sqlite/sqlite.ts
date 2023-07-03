@@ -9,7 +9,6 @@ export class SQLite {
 
     static async open(path: string): Promise<SQLite> {
         let res = await invoke<string>('plugin:st-sqlite|open', { path });
-        console.log(res);
         return new SQLite(path);
     }
 

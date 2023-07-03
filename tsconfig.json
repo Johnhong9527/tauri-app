@@ -17,8 +17,8 @@
     "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"],
-      "clsx": [
-        "./src/types/clsx.d.ts"
+      "table": [
+        "./src/types/table.d.ts"
       ]
     }
   },

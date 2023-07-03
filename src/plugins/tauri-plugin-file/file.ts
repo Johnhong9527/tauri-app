@@ -12,8 +12,17 @@ export class File {
     return await invoke<string[]>("plugin:st-files|get_all_directory", {
       path,
     });
-    // console.log(15,path);
-    // return new Promise(() => res);
+  }
+  static async getType(path: string): Promise<string> {
+    return await invoke<string>("plugin:st-files|get_file_type_by_path", {
+      filePath: path,
+    });
+  }
+
+  static async getHash(path: string): Promise<string> {
+    return await invoke<string>("plugin:st-files|calculate_file_hash", {
+      filePath: path,
+    });
   }
 
   // async close(): Promise<boolean> {

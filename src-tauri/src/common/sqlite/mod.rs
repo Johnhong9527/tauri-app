@@ -28,7 +28,7 @@ pub async fn open_with_flags(path: &String, flags: OpenFlags) -> Result<Arc<Mute
         }
     } else {
         //
-        let mut storage_path = crate::utils::rrai_home_path()?.join("sqlite");
+        let mut storage_path = crate::utils::system_tools_home_path()?.join("sqlite");
         storage_path.push(path.clone());
 
         let prefix = storage_path.parent().unwrap_or(storage_path.as_path());
