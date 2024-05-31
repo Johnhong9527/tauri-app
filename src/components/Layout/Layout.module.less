@@ -3,13 +3,14 @@
   display: flex;
   height: 100vh;
   .menuBox {
-    width: 200px;
+    flex: 0 0 200px;
   }
   .content {
     background-color: white;
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
     flex: 1;
+    overflow: hidden;
 
     .scrollY {
       height: calc(100vh - 64px);

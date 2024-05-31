@@ -16,6 +16,7 @@ import {
   get_list_by_sourceid,
 } from "@/services";
 import { insertSearchFilesPasamsType, historyListType } from "@/types/files";
+import { CopyText } from "@/components/Table/CopyText";
 
 export default function DuplicateFile() {
   const [usePath, setUsePath] = useState<string>(
@@ -26,19 +27,43 @@ export default function DuplicateFile() {
 
   const columns = [
     {
-      title: "编号",
+      title: "ID",
       dataIndex: "id",
       key: "id",
+      render: (text: string, record: { id: string }) => (
+        <CopyText width="30px" color="#333" name={record.id}></CopyText>
+      ),
     },
     {
       title: "路径",
       dataIndex: "name",
+      width: 300,
       key: "name",
+      render: (text: string, record: { name: string }) => (
+        <CopyText width="300px" ellipsisLine={1} color="#333" name={record.name}></CopyText>
+      ),
     },
     {
       title: "哈希值",
       dataIndex: "hash",
+      width: 200,
       key: "hash",
+      render: (text: string, record: { hash: string }) => (
+        <CopyText ellipsisLine={1} name={record.hash}></CopyText>
+      ),
+    },
+    {
+      title: "操作",
+      width: 200,
+      dataIndex: "actions",
+      key: "actions",
+      fixed: "right",
+      render: (text: string, record: { name: string }) => (
+        <Space size="middle">
+          <Button type="link">配置规则</Button>
+          <Button type="link">删除记录</Button>
+        </Space>
+      ),
     },
   ];
   async function sort() {
@@ -132,9 +157,10 @@ export default function DuplicateFile() {
       <Row>已选择路径：{usePath}</Row>
       <Row>
         <Select style={{ width: "100%" }} onChange={historyHandleChange}>
-          {historyList.length > 0 && historyList.map((elm, index) => (
-            <Option key={index}>{elm.path}</Option>
-          ))}
+          {historyList.length > 0 &&
+            historyList.map((elm, index) => (
+              <Option key={index}>{elm.path}</Option>
+            ))}
         </Select>
       </Row>
       {usePath && (
