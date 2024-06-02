@@ -1,37 +1,28 @@
 import styles from "./DuplicateFile.module.less";
-// import { invoke } from "@tauri-apps/api/tauri";
-import { open } from "@tauri-apps/api/dialog";
-import { Col, Row, Button, message, Table, Select, Space } from "antd";
-import { appDataDir } from "@tauri-apps/api/path";
-import File from "@/plugins/tauri-plugin-file/file";
+import { Col, Row, Button, message, Table, Select, Space, Modal, Input } from "antd";
 import { useEffect, useState } from "react";
-// import { SQLite } from "@/plugins/tauri-plugin-sqlite";
-// import {select_history_init} from '@/databases/index'
 const { Option } = Select;
-import {
-  insertSeletedFileHistory,
-  insertSearchFiles,
-  get_info_by_path,
-  get_all_history,
-  get_list_by_sourceid,
-} from "@/services";
-import { insertSearchFilesPasamsType, historyListType } from "@/types/files";
+import {  historyListType, insertSearchFilesPasamsType } from "@/types/files";
 import { CopyText } from "@/components/Table/CopyText";
+import { PlusCircleOutlined } from '@ant-design/icons';
+
+const { Search } = Input;
 
 export default function DuplicateFile() {
   const [usePath, setUsePath] = useState<string>(
-    "/Users/sysadmin/code/rust_project/tauri-app/diff_source"
   );
-  const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([]);
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
+  const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fileInfo, setFileInfo] = useState<any>({})
 
   const columns = [
     {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      render: (text: string, record: { id: string }) => (
-        <CopyText width="30px" color="#333" name={record.id}></CopyText>
+      render: (text: string, record: { id: number }) => (
+        <CopyText width="30px" color="#333"  name={record.id}></CopyText>
       ),
     },
     {
@@ -44,20 +35,18 @@ export default function DuplicateFile() {
       ),
     },
     {
-      title: "哈希值",
-      dataIndex: "hash",
-      width: 200,
-      key: "hash",
-      render: (text: string, record: { hash: string }) => (
-        <CopyText ellipsisLine={1} name={record.hash}></CopyText>
+      title: "时间",
+      dataIndex: "name",
+      width: 300,
+      key: "name",
+      render: (text: string, record: { name: string }) => (
+        <CopyText width="300px" ellipsisLine={1} color="#333" name={record.name}></CopyText>
       ),
     },
     {
       title: "操作",
-      width: 200,
       dataIndex: "actions",
       key: "actions",
-      fixed: "right",
       render: (text: string, record: { name: string }) => (
         <Space size="middle">
           <Button type="link">配置规则</Button>
@@ -66,123 +55,40 @@ export default function DuplicateFile() {
       ),
     },
   ];
-  async function sort() {
-    // 打开本地的系统目录，暂时不支持多选
-    const selected = await open({
-      directory: true,
-      multiple: false,
-      defaultPath: await appDataDir(),
-    });
 
-    if (selected && selected.length) {
-      setUsePath(`${selected}`);
-      // 最多记录 100 条用户操作的历史数据
-      const files = await File.getAllList(`${selected}`);
-      console.log(20202020, files);
-    }
-    // await invoke("file_sort", { path: selected });
-    // setFile([...fileStr, await invoke("file_sort", { path: selected })]);
+
+  function sort()  {
+
   }
 
-  // 存储用户的历史选择记录
-  async function opens() {
-    const res = await insertSeletedFileHistory(usePath);
-    fileHistoryListInit();
-    if (res) {
-      // return message.error(`${res}`)
-    }
-    const [info, msg] = await get_info_by_path(`${usePath}`);
-    if (!info) {
-      return message.error(msg);
-    }
-    // 最多记录 100 条用户操作的历史数据
-    const files = await File.getAllList(usePath);
+  function historyHandleChange() {
 
-    if (files.length) {
-      files.forEach(async (elm) => {
-        const [res, msg] = await insertSearchFiles({
-          // 组装数据
-          sourceId: (info as any).id,
-          path: elm,
-          type: await File.getType(elm),
-          name: elm,
-          hash: await File.getHash(elm),
-        });
-        // console.log(67, res, msg);
-      });
-    }
-    getProcessedQueryData();
-  }
-  useEffect(() => {
-    fileHistoryListInit();
-    getProcessedQueryData();
-  }, []);
-
-  // 查询用户历史纪录
-  async function fileHistoryListInit() {
-    const res = await get_all_history();
-    setHistoryList(res);
   }
 
-  const historyHandleChange = (value: string) => {
-    // console.log(`selected ${value}`);
-    setUsePath(value);
-  };
-
-  // 获取处理好的查询数据数据，根据
-  async function getProcessedQueryData() {
-    console.log(102, usePath);
-    let [info, msg1] = await get_info_by_path(`${usePath}`);
-    if (!info) return;
-    console.log(104, info);
-
-    const [res, msg2] = await get_list_by_sourceid((info as any).id);
-    console.log(109, res);
-    if (!res) return;
-    setFileList(res);
-
-    // const res = await get_all_history();
-    // setHistoryList(res);
-  }
+  function opens() {}
+  function handleOk() {}
+  function handleCancel() {}
 
   return (
     <div className={styles.DuplicateFileBox}>
-      <Row>
-        <Col>
-          <Button onClick={() => sort()}>选择文件路径</Button>
-        </Col>
-
-        <Col>设置文件路径</Col>
-      </Row>
-      <Row>已选择路径：{usePath}</Row>
-      <Row>
-        <Select style={{ width: "100%" }} onChange={historyHandleChange}>
-          {historyList.length > 0 &&
-            historyList.map((elm, index) => (
-              <Option key={index}>{elm.path}</Option>
-            ))}
-        </Select>
-      </Row>
-      {usePath && (
-        <Row>
-          <Button onClick={() => opens()}>开始</Button>
+     
+      <Modal title="添加目录" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+        <Row align="middle">
+          <span>文件路径:</span>
+          <Row justify="space-around" align="middle">
+            <span>{fileInfo.path || ''}</span>
+            <Col><PlusCircleOutlined /></Col>
+          </Row>
         </Row>
-      )}
-      {fileList.length > 0 && (
-        <div>
-          <br />
-          <Row>
-            <Space>
-              <Button type="link">Link Button</Button>
-              <Button type="link">Link Button</Button>
-            </Space>
-          </Row>
-          <br />
-          <Row>
-            <Table rowKey={"id"} dataSource={fileList} columns={columns} />;
-          </Row>
-        </div>
-      )}
+      </Modal>
+      <Row className={styles.searchBox}>
+        <Col span={8}><Search placeholder="请输入" allowClear /></Col>
+        <Col offset={8} span={8} style={{textAlign: 'right'}}><Button type="primary" onClick={() => setIsModalOpen(true)}>新增</Button></Col>
+      </Row>
+      <br />
+      <Row>
+        <Table rowKey={"id"} dataSource={fileList} columns={columns} />
+      </Row>
     </div>
   );
 }

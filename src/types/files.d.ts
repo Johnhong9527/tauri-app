@@ -1,5 +1,5 @@
 export type insertSearchFilesPasamsType = {
-    id?: number|string|any,
+    id: number,
     sourceId: number|string|any,
     path: string,
     type: string,
