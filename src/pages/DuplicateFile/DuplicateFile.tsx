@@ -17,7 +17,23 @@ export default function DuplicateFile() {
   const [usePath, setUsePath] = useState<string>(
   );
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
-  const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([])
+  const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([
+    {
+      id: 1,
+      path:'D:\code\wb_project\bar_association_app',
+      time: '2024-01-23'
+    },
+    {
+      id: 2,
+      path:'D:\code\wb_project\bar_association_app',
+      time: '2024-01-23'
+    },
+    {
+      id: 3,
+      path:'D:\code\wb_project\bar_association_app',
+      time: '2024-01-23'
+    }
+  ])
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({})
 
@@ -32,30 +48,30 @@ export default function DuplicateFile() {
     },
     {
       title: "路径",
-      dataIndex: "name",
+      dataIndex: "path",
       width: 300,
-      key: "name",
-      render: (text: string, record: { name: string }) => (
-        <CopyText width="300px" ellipsisLine={1} color="#333" name={record.name}></CopyText>
+      key: "path",
+      render: (text: string, record: { path: string }) => (
+        <CopyText width="300px" ellipsisLine={1} color="#333" name={record.path}></CopyText>
       ),
     },
     {
       title: "时间",
-      dataIndex: "name",
-      width: 300,
-      key: "name",
-      render: (text: string, record: { name: string }) => (
-        <CopyText width="300px" ellipsisLine={1} color="#333" name={record.name}></CopyText>
+      dataIndex: "time",
+      key: "time",
+      render: (text: string, record: { time: string }) => (
+        <CopyText width="100px" ellipsisLine={1} color="#333" name={record.time}></CopyText>
       ),
     },
     {
       title: "操作",
       dataIndex: "actions",
       key: "actions",
-      render: (text: string, record: { name: string }) => (
+      render: () => (
         <Space size="middle">
-          <Button type="link">配置规则</Button>
-          <Button type="link">删除记录</Button>
+          <Button  onClick={() => setIsModalOpen(true)} type="default" >修改</Button>
+          <Button type="primary">运行</Button>
+          <Button type="primary" danger>删除</Button>
         </Space>
       ),
     },
@@ -86,6 +102,38 @@ export default function DuplicateFile() {
       valus: File_COMPRESSED_TYPE
     }
   ]
+
+  const fileSizeList = [
+    {
+        name: '巨大（4GB+）',
+        values: [4294967296, Infinity] // 从4GB开始到无限大
+    },
+    {
+        name: '特大（1~4GB-）',
+        values: [1073741824, 4294967295] // 从1GB到小于4GB
+    },
+    {
+        name: '大（128MB ~ 1GB-）',
+        values: [134217728, 1073741823] // 从128MB到小于1GB
+    },
+    {
+        name: '中（1MB ~ 128MB-）',
+        values: [1048576, 134217727] // 从1MB到小于128MB
+    },
+    {
+        name: '小（16KB ~ 1MB-）',
+        values: [16384, 1048575] // 从16KB到小于1MB
+    },
+    {
+        name: '微小（1B ~ 16KB-）',
+        values: [1, 16383] // 从1B到小于16KB
+    },
+    {
+        name: '空文件及目录',
+        values: [0, 0] // 特殊类型，表示空文件或目录，无实际大小
+    }
+]
+
 
 
   async function getDir()  {
@@ -152,6 +200,23 @@ export default function DuplicateFile() {
     })
   }
 
+  const checkboxSizeAll = () => {
+    const checkedSizeValues = fileSizeList.map(typeInfo => typeInfo.name)
+    setFileInfo({
+      ...fileInfo,
+      checkboxSizeAll: !fileInfo.checkboxSizeAll,
+      checkedSizeValues: fileInfo.checkboxSizeAll ? []: checkedSizeValues
+    })
+  }
+
+  const onSizesChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
+    console.log('checkedSizeValues = ', checkedValues);
+    setFileInfo({
+      ...fileInfo,
+      checkedSizeValues: checkedValues
+    })
+  };
+
   return (
     <div className={styles.DuplicateFileBox}>
       <Modal title="添加目录" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
@@ -173,7 +238,7 @@ export default function DuplicateFile() {
             padding: '2px 12px'
           }}>
             <Row style={{flex: 1}}><Checkbox onChange={() => checkboxAll() } value={'全选/不选'}>全选/不选</Checkbox></Row>
-             <Checkbox.Group onChange={onTypesChange} value={fileInfo.checkedTypeValues}>
+            <Checkbox.Group onChange={onTypesChange} value={fileInfo.checkedTypeValues}>
               {
                 fileTypeList.map((typeInfo) => (
                   <Col span={7} >
@@ -221,15 +286,25 @@ export default function DuplicateFile() {
             
           </Row>
         </Row>
-        <Row align="middle">
+        <Row align="top">
           <span>文件大小:</span>
-          <Row justify="space-around" align="middle">
-            <span className={styles.filePath}>{fileInfo.path || ''}</span>
-            <Col>
-             {
-              fileInfo.path ?  <RedoOutlined className={styles.iconHover} onClick={() => getDir()}/> : <PlusCircleOutlined className={styles.iconHover} onClick={() => getDir()}/>
-             }
-            </Col>
+          <Row style={{
+            flex: 1,
+            padding: '2px 12px'
+          }}>
+            <Col span={11}></Col>
+            <Checkbox.Group onChange={onSizesChange} value={fileInfo.checkedSizeValues}>
+              <Col span={11} >
+                <Checkbox onChange={() => checkboxSizeAll() }>全选/不选</Checkbox>
+              </Col>
+              {
+                fileSizeList.map((typeInfo) => (
+                  <Col span={11} >
+                    <Checkbox value={typeInfo.name}>{typeInfo.name}</Checkbox>
+                  </Col>
+                ))
+              }
+            </Checkbox.Group>
           </Row>
         </Row>
       </Modal>

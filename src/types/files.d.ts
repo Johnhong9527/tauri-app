@@ -1,10 +1,8 @@
 export type insertSearchFilesPasamsType = {
     id: number,
-    sourceId: number|string|any,
+    sourceId?: number|string|any,
     path: string,
-    type: string,
-    name: string,
-    hash: string,
+    time: string
 }
 
 export type historyListType = {

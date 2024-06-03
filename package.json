@@ -16,6 +16,7 @@
     "@tauri-apps/api": "^1.5.6",
     "antd": "^5.17.4",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^6.23.1",
