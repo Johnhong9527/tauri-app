@@ -1,5 +1,5 @@
 import styles from "./DuplicateFile.module.less";
-import { Col, Row, Button, message, Table, Select, Space, Modal, Input, Checkbox, GetProp } from "antd";
+import { Col, Row, Button, message, Table, Select, Space, Modal, Input, Checkbox, GetProp, Progress } from "antd";
 import { useEffect, useState } from "react";
 const { Option } = Select;
 import { open } from "@tauri-apps/api/dialog";
@@ -21,17 +21,20 @@ export default function DuplicateFile() {
     {
       id: 1,
       path:'D:\code\wb_project\bar_association_app',
-      time: '2024-01-23'
+      time: '2024-01-23',
+      progress: 80
     },
     {
       id: 2,
       path:'D:\code\wb_project\bar_association_app',
-      time: '2024-01-23'
+      time: '2024-01-23',
+      progress: 20
     },
     {
       id: 3,
       path:'D:\code\wb_project\bar_association_app',
-      time: '2024-01-23'
+      time: '2024-01-23',
+      progress: 90
     }
   ])
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,9 +67,19 @@ export default function DuplicateFile() {
       ),
     },
     {
+      title: "进度",
+      dataIndex: "time",
+      key: "time",
+      with: 200,
+      render: (text: string, record: { progress: number }) => (
+        <div style={{width: '200px'}}><Progress percent={record.progress} /></div>
+      ),
+    },
+    {
       title: "操作",
       dataIndex: "actions",
       key: "actions",
+      fixed: "right",
       render: () => (
         <Space size="middle">
           <Button  onClick={() => setIsModalOpen(true)} type="default" >修改</Button>
