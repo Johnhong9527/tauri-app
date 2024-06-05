@@ -4,7 +4,13 @@ export const createSql = {
         time TIMESTAMP,
         name TEXT CHECK(length(name) <= 255),
         path TEXT CHECK(length(path) <= 500),
-        unique(path)
+        unique(path),
+        checkboxAll INTEGER NOT NULL CHECK (Enabled IN (0, 1)),
+        addType TEXT,
+        passType TEXT,
+        checkedSizeValues TEXT,
+        checkboxSizeAll INTEGER NOT NULL CHECK (Enabled IN (0, 1)),
+        checkedTypeValues TEXT
     );`,
     search_files: `CREATE TABLE search_files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

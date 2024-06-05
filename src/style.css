@@ -10,3 +10,8 @@
   --color-9: #061178;
   --color-10: #030852;
 }
+
+body {
+  padding: 0;
+  margin: 0;
+}

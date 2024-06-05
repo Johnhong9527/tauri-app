@@ -1,70 +1,91 @@
 import styles from "./DuplicateFile.module.less";
-import { Col, Row, Button, message, Table, Select, Space, Modal, Input, Checkbox, GetProp, Progress } from "antd";
+import {
+  Col,
+  Row,
+  Button,
+  message,
+  Table,
+  Select,
+  Space,
+  Input,
+  Progress,
+  Pagination,
+} from "antd";
 import { useEffect, useState } from "react";
 const { Option } = Select;
-import { open } from "@tauri-apps/api/dialog";
-import File from "@/plugins/tauri-plugin-file/file";
-import {  historyListType, insertSearchFilesPasamsType } from "@/types/files";
+import { historyListType, insertSearchFilesPasamsType } from "@/types/files";
 import { CopyText } from "@/components/Table/CopyText";
-import { PlusCircleOutlined, RedoOutlined } from '@ant-design/icons';
-import { appDataDir } from "@tauri-apps/api/path";
-import { File_APPLICATION_TYPE, File_AUDIO_TYPE, File_COMPRESSED_TYPE, File_DOCUMENT_TYPE, File_IMAGE_TYPE, File_VIDEO_TYPE } from "@/config";
-import type { FixedType } from 'rc-table/lib/interface';
+import type { FixedType } from "rc-table/lib/interface";
+import FileInfoEditer from "./FileInfoEditer";
+import { FileInfoType } from "@/types/files";
+import { get_info_by_path, insertSeletedFileHistory } from "@/services";
 
 const { Search } = Input;
 const { TextArea } = Input;
 
 export default function DuplicateFile() {
-  const [usePath, setUsePath] = useState<string>(
-  );
+  const [usePath, setUsePath] = useState<string>();
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
   const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([
     {
       id: 1,
-      path:'D:\code\wb_project\bar_association_app',
-      time: '2024-01-23',
-      progress: 80
+      path: "D:/code/wb_project/bar_association_app",
+      time: "2024-01-23",
+      progress: 80,
     },
     {
       id: 2,
-      path:'D:\code\wb_project\bar_association_app',
-      time: '2024-01-23',
-      progress: 20
+      path: "D:/code/wb_project/bar_association_app",
+      time: "2024-01-23",
+      progress: 20,
     },
     {
       id: 3,
-      path:'D:\code\wb_project\bar_association_app',
-      time: '2024-01-23',
-      progress: 90
-    }
-  ])
+      path: "D:/code/wb_project/bar_association_app",
+      time: "2024-01-23",
+      progress: 90,
+    },
+  ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [fileInfo, setFileInfo] = useState<any>({})
+  const [fileInfo, setFileInfo] = useState<any>({});
+  const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
 
   const columns = [
     {
       title: "ID",
       dataIndex: "id",
       key: "id",
+      width: 30,
       render: (text: string, record: { id: number }) => (
-        <CopyText width="30px" color="#333"  name={record.id}></CopyText>
+        <CopyText width="30px" color="#333" name={record.id}></CopyText>
       ),
     },
     {
       title: "路径",
       dataIndex: "path",
-      width: 300,
       key: "path",
+      width: 300,
       render: (text: string, record: { path: string }) => (
-        <CopyText width="300px" ellipsisLine={1} color="#333" name={record.path}></CopyText>
+        <CopyText
+          width="300px"
+          ellipsisLine={1}
+          color="#333"
+          name={record.path}
+        ></CopyText>
       ),
     },
     {
       title: "时间",
       dataIndex: "time",
       key: "time",
+      width: 100,
       render: (text: string, record: { time: string }) => (
-        <CopyText width="100px" ellipsisLine={1} color="#333" name={record.time}></CopyText>
+        <CopyText
+          width="100px"
+          ellipsisLine={1}
+          color="#333"
+          name={record.time}
+        ></CopyText>
       ),
     },
     {
@@ -73,7 +94,9 @@ export default function DuplicateFile() {
       key: "time",
       with: 200,
       render: (text: string, record: { progress: number }) => (
-        <div style={{width: '200px'}}><Progress percent={record.progress} /></div>
+        <div style={{ width: "200px" }}>
+          <Progress percent={record.progress} />
+        </div>
       ),
     },
     {
@@ -81,254 +104,104 @@ export default function DuplicateFile() {
       dataIndex: "actions",
       key: "actions",
       fixed: "right" as FixedType,
+      width: 220,
       render: () => (
-        <Space size="middle">
-          <Button  onClick={() => setIsModalOpen(true)} type="default" >修改</Button>
+        <Space size="middle" style={{ width: "220px" }} align="baseline">
+          <Button onClick={() => setIsModalOpen(true)} type="default">
+            修改
+          </Button>
           <Button type="primary">运行</Button>
-          <Button type="primary" danger>删除</Button>
+          <Button type="primary" danger>
+            删除
+          </Button>
         </Space>
       ),
     },
   ];
-  const fileTypeList = [
-    {
-      name: '音频',
-      valus: File_AUDIO_TYPE
-    },
-    {
-      name: '视频',
-      valus: File_VIDEO_TYPE
-    },
-    {
-      name: '文档',
-      valus: File_DOCUMENT_TYPE
-    },
-    {
-      name: '图片',
-      valus: File_IMAGE_TYPE
-    },
-    {
-      name: '应用程序',
-      valus: File_APPLICATION_TYPE
-    },
-    {
-      name: '压缩包',
-      valus: File_COMPRESSED_TYPE
-    }
-  ]
 
-  const fileSizeList = [
-    {
-        name: '巨大（4GB+）',
-        values: [4294967296, Infinity] // 从4GB开始到无限大
-    },
-    {
-        name: '特大（1~4GB-）',
-        values: [1073741824, 4294967295] // 从1GB到小于4GB
-    },
-    {
-        name: '大（128MB ~ 1GB-）',
-        values: [134217728, 1073741823] // 从128MB到小于1GB
-    },
-    {
-        name: '中（1MB ~ 128MB-）',
-        values: [1048576, 134217727] // 从1MB到小于128MB
-    },
-    {
-        name: '小（16KB ~ 1MB-）',
-        values: [16384, 1048575] // 从16KB到小于1MB
-    },
-    {
-        name: '微小（1B ~ 16KB-）',
-        values: [1, 16383] // 从1B到小于16KB
-    },
-    {
-        name: '空文件及目录',
-        values: [0, 0] // 特殊类型，表示空文件或目录，无实际大小
-    }
-]
-
-
-
-  async function getDir()  {
-    // 打开本地的系统目录，暂时不支持多选
-    const selected = await open({
-      directory: true,
-      multiple: false,
-      defaultPath: await appDataDir(),
-    });
-
-    if (selected && selected.length) {
-      setFileInfo({
-        ...fileInfo,
-        path: selected
-      })
-      // setUsePath(`${selected}`);
-      // 最多记录 100 条用户操作的历史数据
-      // const files = await File.getAllList(`${selected}`);
-    }
-    // await invoke("file_sort", { path: selected });
-    // setFile([...fileStr, await invoke("file_sort", { path: selected })]);
+  async function handleOk(newFileInfo: FileInfoType) {
+    console.log(180, newFileInfo);
+    const res = await insertSeletedFileHistory(newFileInfo.path);
+    console.log(133, res);
   }
-
-  function historyHandleChange() {
-
-  }
-
-  function opens() {}
-  function handleOk() {}
   function handleCancel() {
     setFileInfo({});
     setIsModalOpen(false);
   }
 
-  const onTypesChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
-    console.log('checked = ', checkedValues);
-    setFileInfo({
-      ...fileInfo,
-      checkedTypeValues: checkedValues
-    })
-  };
+  async function openModal(info?: FileInfoType) {
+    setIsModalOpen(true);
+    // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
+    // console.log(133, res);
+    // const res = await get_info_by_path('/Users/sysadmin/Downloads')
+    // console.log(135, res)
+    /* setIsModalOpen(true);
+    setFileInfoSource({
+      path: "/Users/sysadmin/Downloads",
+      checkedTypeValues: ["音频", "图片"],
+      checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"],
+      addType: "2131231231231"
+    }); */
+    /* 
+    
+    {path: "/Users/sysadmin/Downloads", checkedTypeValues: ["音频", "图片"], checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"]}
 
 
-  const onAddTypeChange = (types: string) => {
-    setFileInfo({
-      ...fileInfo,
-      addType: types
-    })
-  };
-  const onPassTypeChange = (types: string) => {
-    setFileInfo({
-      ...fileInfo,
-      passType: types
-    })
-  };
+    [Log] 180 (FileInfoEditer.tsx, line 69)
+Object
 
-  const checkboxAll = () => {
-    const otherTypes = ['其他所有带扩展名的类型', '其他所有无扩展名的类型', '指定', '排除'];
-    const checkedValues = fileTypeList.map(typeInfo => typeInfo.name)
-    setFileInfo({
-      ...fileInfo,
-      checkboxAll: !fileInfo.checkboxAll,
-      checkedTypeValues: fileInfo.checkboxAll ? []: [...checkedValues, ...otherTypes]
-    })
+addType: "2131231231231"
+
+checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）", "中（1MB ~ 128MB-）"] (3)
+
+checkedTypeValues: ["音频", "图片"] (2)
+
+path: "/Users/sysadmin/Downloads"
+
+Object Prototype
+
+
+    */
   }
-
-  const checkboxSizeAll = () => {
-    const checkedSizeValues = fileSizeList.map(typeInfo => typeInfo.name)
-    setFileInfo({
-      ...fileInfo,
-      checkboxSizeAll: !fileInfo.checkboxSizeAll,
-      checkedSizeValues: fileInfo.checkboxSizeAll ? []: checkedSizeValues
-    })
-  }
-
-  const onSizesChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
-    console.log('checkedSizeValues = ', checkedValues);
-    setFileInfo({
-      ...fileInfo,
-      checkedSizeValues: checkedValues
-    })
-  };
 
   return (
     <div className={styles.DuplicateFileBox}>
-      <Modal title="添加目录" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
-        <Row align="middle">
-          <span>文件路径:</span>
-          <Row justify="space-around" align="middle">
-            <span className={styles.filePath}>{fileInfo.path || ''}</span>
-            <Col>
-             {
-              fileInfo.path ?  <RedoOutlined className={styles.iconHover} onClick={() => getDir()}/> : <PlusCircleOutlined className={styles.iconHover} onClick={() => getDir()}/>
-             }
-            </Col>
-          </Row>
-        </Row>
-        <Row align="top">
-          <span>文件类型:</span>
-          <Row style={{
-            flex: 1,
-            padding: '2px 12px'
-          }}>
-            <Row style={{flex: 1}}><Checkbox onChange={() => checkboxAll() } value={'全选/不选'}>全选/不选</Checkbox></Row>
-            <Checkbox.Group onChange={onTypesChange} value={fileInfo.checkedTypeValues}>
-              {
-                fileTypeList.map((typeInfo) => (
-                  <Col span={7} >
-                    <Checkbox value={typeInfo.name}>{typeInfo.name}</Checkbox>
-                  </Col>
-                ))
-              }
-              <Col span={24} >
-                <Checkbox value={'其他所有带扩展名的类型'}>其他所有带扩展名的类型</Checkbox>
-              </Col>
-              <Col span={24} >
-                <Checkbox value={'其他所有无扩展名的类型'}>其他所有无扩展名的类型</Checkbox>
-              </Col>
-              <Col span={24}>
-                <Row style={{flex: 1, marginTop: '8px'}}>
-                  <Col span={4}>
-                    <Checkbox value={'指定'}>指定</Checkbox>
-                  </Col>
-                  <Col span={20}>
-                    <TextArea
-                      value={fileInfo.addType}
-                      onChange={(e) => onAddTypeChange(e.target.value)}
-                      placeholder="格式：.扩展名1.扩展名2…"
-                      autoSize={{ minRows: 3, maxRows: 5 }}
-                    />
-                  </Col>
-                </Row>
-              </Col>
-              <Col span={24}>
-                <Row style={{flex: 1, marginTop: '8px'}}>
-                  <Col span={4}>
-                    <Checkbox value={'排除'}>排除</Checkbox>
-                  </Col>
-                  <Col span={20}>
-                    <TextArea
-                      value={fileInfo.passType}
-                      onChange={(e) => onPassTypeChange(e.target.value)}
-                      placeholder="格式：.扩展名1.扩展名2…"
-                      autoSize={{ minRows: 3, maxRows: 5 }}
-                    />
-                  </Col>
-                </Row>
-              </Col>
-             </Checkbox.Group>
-            
-          </Row>
-        </Row>
-        <Row align="top">
-          <span>文件大小:</span>
-          <Row style={{
-            flex: 1,
-            padding: '2px 12px'
-          }}>
-            <Col span={11}></Col>
-            <Checkbox.Group onChange={onSizesChange} value={fileInfo.checkedSizeValues}>
-              <Col span={11} >
-                <Checkbox onChange={() => checkboxSizeAll() }>全选/不选</Checkbox>
-              </Col>
-              {
-                fileSizeList.map((typeInfo) => (
-                  <Col span={11} >
-                    <Checkbox value={typeInfo.name}>{typeInfo.name}</Checkbox>
-                  </Col>
-                ))
-              }
-            </Checkbox.Group>
-          </Row>
-        </Row>
-      </Modal>
+      <FileInfoEditer
+        title="添加目录"
+        showModal={isModalOpen}
+        fileInfoSource={fileInfoSource}
+        onClickOk={handleOk}
+        onClickCancel={handleCancel}
+      ></FileInfoEditer>
       <Row className={styles.searchBox}>
-        <Col span={8}><Search placeholder="请输入" allowClear /></Col>
-        <Col offset={8} span={8} style={{textAlign: 'right'}}><Button type="primary" onClick={() => setIsModalOpen(true)}>新增</Button></Col>
+        <Col span={8}>
+          <Search placeholder="请输入" allowClear />
+        </Col>
+        <Col offset={8} span={8} style={{ textAlign: "right" }}>
+          <Button type="primary" onClick={() => openModal()}>
+            新增
+          </Button>
+        </Col>
       </Row>
       <br />
-      <Row>
-        <Table rowKey={"id"} dataSource={fileList} columns={columns} />
+      <Row
+        style={{
+          width: "100%",
+          overflow: "scroll",
+        }}
+      >
+        <Table
+          style={{
+            width: "100%",
+          }}
+          rowKey={"id"}
+          dataSource={fileList}
+          columns={columns}
+          pagination={false}
+        />
+      </Row>
+      <Row justify="end" style={{ width: "100%", marginTop: "12px" }}>
+        <Pagination defaultCurrent={1} total={50} />
       </Row>
     </div>
   );

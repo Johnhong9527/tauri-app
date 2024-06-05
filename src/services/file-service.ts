@@ -1,9 +1,18 @@
 import { table_init } from "@/databases/index";
 import { SQLite } from "@/plugins/tauri-plugin-sqlite";
 import { FILE_DB_PATH } from "@/config";
-import { historyListType, insertSearchFilesPasamsType } from "@/types/files";
+import { FileInfoType, historyListType, insertSearchFilesPasamsType } from "@/types/files";
 
-export async function insertSeletedFileHistory(path: string) {
+export async function insertSeletedFileHistory(path?: string, fileInfo?: FileInfoType) {
+  /* 
+    addType: ".1231,.kidd"
+    checkboxAll: true
+    checkboxSizeAll: true
+    checkedSizeValues: ["巨大（4GB+）", "特大（1~4GB-）", "大（128MB ~ 1GB-）", "中（1MB ~ 128MB-）", "小（16KB ~ 1MB-）", "微小（1B ~ 16KB-）", "空文件及目录"] (7)
+    checkedTypeValues: ["音频", "视频", "文档", "图片", "应用程序", "压缩包", "其他所有带扩展名的类型", "其他所有无扩展名的类型", "指定", "排除"] (10)
+    passType: ".1231,.2113"
+    path: "/Users/sysadmin/Downloads"
+ */
   try {
     await table_init(FILE_DB_PATH, "select_history");
     const DB = await SQLite.open(FILE_DB_PATH);
