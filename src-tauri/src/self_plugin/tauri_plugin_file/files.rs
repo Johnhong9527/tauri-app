@@ -54,11 +54,22 @@ fn read_files_in_directory(directory: &Path, files: &mut Vec<PathBuf>) -> Result
         for entry in entries {
             if let Ok(entry) = entry {
                 let path = entry.path();
-                if path.is_file() && filter_other_directory(path.display().to_string().as_str(), &[".obsidian", ".DS_Store"]) {
+                if path.is_file()
+                    && filter_other_directory(
+                        path.display().to_string().as_str(),
+                        &[".obsidian", ".DS_Store"],
+                    )
+                {
                     // 过滤文件
-                    println!("{}", path.display());
+                    // TODO 后续加上需要过滤的文件
+                    println!("59{}", path.display());
                     files.push(path.clone());
-                } else if path.is_dir() && filter_other_directory(path.display().to_string().as_str(), &["node_modules", ".git", ".obsidian", ".DS_Store"]) {
+                } else if path.is_dir()
+                    && filter_other_directory(
+                        path.display().to_string().as_str(),
+                        &["node_modules", ".git", ".obsidian", ".DS_Store"],
+                    )
+                {
                     // 过滤 目录
                     // println!("{}", path.display());
                     read_files_in_directory(&path, files)?;

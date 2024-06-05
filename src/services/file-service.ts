@@ -68,12 +68,12 @@ export async function insertSearchFiles({
         ":hash": hash,
       }
     );
-    return [true, ""];
+    return Promise.resolve([true, ""]);
   } catch (err) {
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
-      return [false, "当前路径重复"];
+      return Promise.resolve([false, "当前路径重复"]);
     }
-    return [false, err];
+    return Promise.resolve([false, err]);
   }
 }
 
@@ -85,18 +85,20 @@ export async function get_all_history(): Promise<historyListType[]>{
   );
 }
 
-export async function get_list_by_sourceid(sourceid: number):Promise<[insertSearchFilesPasamsType[]|false, string]>{
+export async function get_list_by_sourceid(sourceId: number):Promise<[insertSearchFilesPasamsType[]|false, string]>{
   try {
     await table_init(FILE_DB_PATH, "select_history");
     const DB = await SQLite.open(FILE_DB_PATH);
-    /* const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
-      "SELECT * FROM search_files WHERE sourceId = :sourceId",
-      { ":sourceId": sourceid }
-    ); */
     const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
+      "SELECT * FROM search_files WHERE sourceId = :sourceId",
+      { ":sourceId": sourceId }
+    );
+    console.log(969696, sourceId);
+    
+    /* const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
       "SELECT * FROM search_files WHERE sourceId = :sourceId GROUP BY hash HAVING COUNT(*) > 1",
       { ":sourceId": sourceid }
-    );
+    ); */
     console.log(3434, res);
     
     if(res.length) {

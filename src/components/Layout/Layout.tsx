@@ -45,7 +45,6 @@ export default function Layout() {
         unListen.push(ulf);
       })
       .catch(() => {});
-
     return () => {
       for (const ulf of unListen) ulf();
     };

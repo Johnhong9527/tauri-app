@@ -1,16 +1,20 @@
 import styles from "./Menu.module.less";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 
 export default function Menu() {
   let navigate = useNavigate();
+  const location = useLocation();
   const [active, setActive] = useState<string>("");
   useEffect(() => {
     initMenu();
   }, []);
 
   async function initMenu() {
+    console.log(141414, location);
+    
     // const config = LogicalSize;
     // console.log({ LogicalSize: new LogicalSize() });
     // console.log(window);
@@ -30,7 +34,7 @@ export default function Menu() {
         },
         {
           label: "重复文件",
-          path: "/duplicateFile",
+          path: "/",
         },
       ],
     },

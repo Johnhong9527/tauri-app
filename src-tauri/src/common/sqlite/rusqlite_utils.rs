@@ -1,18 +1,21 @@
 use anyhow::{anyhow, Result}; // 引入错误处理库
 use rusqlite::{
-    types::FromSql, // 用于将 SQLite 数据类型转换为 Rust 类型
+    types::FromSql,              // 用于将 SQLite 数据类型转换为 Rust 类型
     types::Value as SqliteValue, // SQLite 的值类型
     types::ValueRef::{Blob, Integer, Null, Real, Text}, // SQLite 值引用类型
-    Connection, Params, Row, ToSql, // 引入 SQLite 连接、参数、行和 ToSql 类型
+    Connection,
+    Params,
+    Row,
+    ToSql, // 引入 SQLite 连接、参数、行和 ToSql 类型
 };
 use serde_json::{Number, Value}; // 引入 JSON 处理库
 use std::{collections::HashMap, sync::Mutex}; // 引入 HashMap 和 Mutex
 
 // 查询单个值
 pub fn query_one_value<P, V>(connection: &Connection, sql: &str, p: P) -> Result<V>
-    where
-        P: Params, // 参数类型
-        V: FromSql, // 从 SQLite 值转换的类型
+where
+    P: Params,  // 参数类型
+    V: FromSql, // 从 SQLite 值转换的类型
 {
     // 准备 SQL 语句
     let mut stmt = connection.prepare(sql)?;
@@ -38,7 +41,7 @@ pub fn rusqlite_row_to_value(row: &Row<'_>, cnt: usize) -> Result<Vec<Value>> {
         let rusqlite_value = row.get_ref_unwrap(i);
         // 将 rusqlite 的值转换为 JSON 值
         let idns_value = match rusqlite_value {
-            Null => Value::Null, // 空值
+            Null => Value::Null,                                  // 空值
             Integer(i64_v) => Value::Number(Number::from(i64_v)), // 整数
             Real(f64_v) => Value::Number(Number::from_f64(f64_v).map_or(Number::from(0i64), |r| r)), // 浮点数
             Text(str_v) => Value::String(String::from_utf8(str_v.to_vec()).unwrap()), // 文本
@@ -61,8 +64,8 @@ pub fn rusqlite_row_to_map(_row: &Row<'_>, names: &Vec<String>) -> Result<HashMa
             Real(f64_v) => Value::Number(Number::from_f64(f64_v).map_or(Number::from(0i64), |r| r)), // 浮点数
             Integer(i64_v) => Value::Number(Number::from(i64_v)), // 整数
             Text(str_v) => Value::String(String::from_utf8(str_v.to_vec()).unwrap()), // 文本
-            Blob(v) => Value::Null, // 二进制数据（这里处理为 Null）
-            _ => Value::Null, // 其他类型处理为 Null
+            Blob(_v) => Value::Null,                              // 二进制数据（这里处理为 Null）
+            _ => Value::Null,                                     // 其他类型处理为 Null
         };
         row.insert(name.to_owned(), v); // 将列名和值添加到 HashMap 中
     }
@@ -85,6 +88,6 @@ pub fn value_to_rusqlite_value(json_value: &Value) -> Result<SqliteValue> {
             }
         }
         Value::String(string_v) => SqliteValue::Text(string_v.clone()), // 字符串
-        _ => SqliteValue::Null, // 其他类型处理为 Null
+        _ => SqliteValue::Null,                                         // 其他类型处理为 Null
     });
 }

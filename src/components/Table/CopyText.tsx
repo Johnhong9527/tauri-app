@@ -11,7 +11,7 @@ export function CopyText({
   width?: string | undefined;
   color?: string | undefined;
   ellipsisLine?: number;
-  name: string;
+  name: number|string;
 }) {
   const textRef = useRef<HTMLDivElement>(null);
   const [baseStyle, setBaseStyle] = useState<CSSProperties>({
@@ -47,7 +47,7 @@ export function CopyText({
   }, [ellipsisLine, width, color]);
 
   const content = (
-    <div ref={textRef} style={baseStyle} onClick={() => copyText(name)}>
+    <div ref={textRef} style={baseStyle} onClick={() => copyText(`${name}`)}>
       {name}
     </div>
   );
