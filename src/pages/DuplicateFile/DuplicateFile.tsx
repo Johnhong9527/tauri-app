@@ -9,6 +9,7 @@ import { CopyText } from "@/components/Table/CopyText";
 import { PlusCircleOutlined, RedoOutlined } from '@ant-design/icons';
 import { appDataDir } from "@tauri-apps/api/path";
 import { File_APPLICATION_TYPE, File_AUDIO_TYPE, File_COMPRESSED_TYPE, File_DOCUMENT_TYPE, File_IMAGE_TYPE, File_VIDEO_TYPE } from "@/config";
+import type { FixedType } from 'rc-table/lib/interface';
 
 const { Search } = Input;
 const { TextArea } = Input;
@@ -79,7 +80,7 @@ export default function DuplicateFile() {
       title: "操作",
       dataIndex: "actions",
       key: "actions",
-      fixed: "right",
+      fixed: "right" as FixedType,
       render: () => (
         <Space size="middle">
           <Button  onClick={() => setIsModalOpen(true)} type="default" >修改</Button>
