@@ -4,7 +4,7 @@ import { FILE_DB_PATH } from "@/config";
 import { FileInfoType, historyListType, insertSearchFilesPasamsType } from "@/types/files";
 
 export async function insertSeletedFileHistory(path?: string, fileInfo?: FileInfoType) {
-  /* 
+  /*
     addType: ".1231,.kidd"
     checkboxAll: true
     checkboxSizeAll: true
@@ -41,9 +41,9 @@ export async function get_info_by_path(path: string):Promise<[{id: number}|boole
       { ":path": path }
     );
     console.log(3434, res);
-    
+
     if(res.length) {
-      return [res[0], ""];  
+      return [res[0], ""];
     }
     return [false, "暂无数据"];
   } catch (err) {
@@ -59,9 +59,9 @@ export async function get_info_by_path(path: string):Promise<[{id: number}|boole
 export async function insertSearchFiles({
   path,
   sourceId,
-  type,
-  name,
-  hash
+  // type,
+  // name,
+  // hash
 }: insertSearchFilesPasamsType) {
   try {
     await table_init(FILE_DB_PATH, "search_files");
@@ -72,9 +72,9 @@ export async function insertSearchFiles({
         ":time": new Date().getTime(),
         ":sourceId": sourceId,
         ":path": path,
-        ":type": type,
-        ":name": name,
-        ":hash": hash,
+        // ":type": type,
+        // ":name": name,
+        // ":hash": hash,
       }
     );
     return Promise.resolve([true, ""]);
@@ -103,15 +103,15 @@ export async function get_list_by_sourceid(sourceId: number):Promise<[insertSear
       { ":sourceId": sourceId }
     );
     console.log(969696, sourceId);
-    
+
     /* const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
       "SELECT * FROM search_files WHERE sourceId = :sourceId GROUP BY hash HAVING COUNT(*) > 1",
       { ":sourceId": sourceid }
     ); */
     console.log(3434, res);
-    
+
     if(res.length) {
-      return [res, ""];  
+      return [res, ""];
     }
     return [false, "暂无数据"];
   } catch (err) {

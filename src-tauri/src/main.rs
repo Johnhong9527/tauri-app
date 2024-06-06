@@ -20,6 +20,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_sqlite::init())
         .plugin(tauri_plugin_file::init())
+        .plugin(tauri_plugin_sql::Builder::default().build())
         .menu(use_memu())
         .on_menu_event(|event| {
             // 处理菜单事件

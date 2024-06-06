@@ -56,7 +56,7 @@ export default function FileInfoEditer({
     if (selected && selected.length) {
       setFileInfo({
         ...fileInfo,
-        path: selected,
+        path: selected[0],
       });
       // setUsePath(`${selected}`);
       // 最多记录 100 条用户操作的历史数据
