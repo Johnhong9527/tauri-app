@@ -589,7 +589,7 @@
   resolved "https://registry.npmjs.org/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.18.0.tgz#5d694d345ce36b6ecf657349e03eb87297e68da4"
   integrity sha512-UOo5FdvOL0+eIVTgS4tIdbW+TtnBLWg1YBCcU2KWM7nuNwRz9bksDX1bekJJCpu25N1DVWaCwnT39dVQxzqS8g==
 
-"@tauri-apps/api@^1.5.6":
+"@tauri-apps/api@1.5.6", "@tauri-apps/api@^1.5.6":
   version "1.5.6"
   resolved "https://registry.npmjs.org/@tauri-apps/api/-/api-1.5.6.tgz#7496d79f6586659a59bc6e9d6666eed8d24dc6da"
   integrity sha512-LH5ToovAHnDVe5Qa9f/+jW28I6DeMhos8bNDtBOmmnaDpPmJmYLyHdeDblAWWWYc7KKRDg9/66vMuKyq0WIeFA==
@@ -1601,6 +1601,12 @@ supports-color@^5.3.0:
   integrity sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==
   dependencies:
     has-flag "^3.0.0"
+
+"tauri-plugin-sql-api@https://github.com/tauri-apps/tauri-plugin-sql#v1":
+  version "0.0.0"
+  resolved "https://github.com/tauri-apps/tauri-plugin-sql#6a4a14c36b1ad49c9f468351706d104a54e0540c"
+  dependencies:
+    "@tauri-apps/api" "1.5.6"
 
 throttle-debounce@^5.0.0:
   version "5.0.0"

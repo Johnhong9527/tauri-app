@@ -20,6 +20,10 @@ import FileInfoEditer from "./FileInfoEditer";
 import { FileInfoType } from "@/types/files";
 import { get_info_by_path, insertSeletedFileHistory } from "@/services";
 
+import Database from "tauri-plugin-sql-api";
+import { createSql } from "@/databases/createTableSql";
+const db = await Database.load("sqlite:test.db");
+
 const { Search } = Input;
 const { TextArea } = Input;
 
@@ -49,6 +53,8 @@ export default function DuplicateFile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
+
+
 
   const columns = [
     {
@@ -130,7 +136,8 @@ export default function DuplicateFile() {
   }
 
   async function openModal(info?: FileInfoType) {
-    setIsModalOpen(true);
+    initDB()
+    // setIsModalOpen(true);
     // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
     // console.log(133, res);
     // const res = await get_info_by_path('/Users/sysadmin/Downloads')
@@ -142,8 +149,8 @@ export default function DuplicateFile() {
       checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"],
       addType: "2131231231231"
     }); */
-    /* 
-    
+    /*
+
     {path: "/Users/sysadmin/Downloads", checkedTypeValues: ["音频", "图片"], checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"]}
 
 
@@ -164,6 +171,15 @@ Object Prototype
     */
   }
 
+
+  async function initDB() {
+    try {
+      const result = await db.execute(createSql.search_files);
+      console.log(179, result);
+    } catch (error) {
+      console.log(182, error);
+    }
+  }
   return (
     <div className={styles.DuplicateFileBox}>
       <FileInfoEditer
