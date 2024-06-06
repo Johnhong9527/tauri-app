@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fs;
 // use crypto::digest::Digest;
 // use crypto::sha2::Sha256;
