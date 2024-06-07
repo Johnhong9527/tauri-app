@@ -10,6 +10,7 @@ import {
   Input,
   Progress,
   Pagination,
+  PaginationProps,
 } from "antd";
 import { useEffect, useState } from "react";
 const { Option } = Select;
@@ -22,10 +23,16 @@ import { get_all_history, get_info_by_path, insertSeletedFileHistory } from "@/s
 import dayjs from "dayjs";
 import { DEFAULT_TIME_FORMAT } from "@/config";
 
+import Database from "tauri-plugin-sql-api";
+import { createSql } from "@/databases/createTableSql";
+const db = await Database.load("sqlite:test.db");
+
 const { Search } = Input;
 const { TextArea } = Input;
 
 export default function DuplicateFile() {
+  const [total, setTotal] = useState(20); // 页数
+  const [current, setCurrent] = useState(1); // 页码
   const [usePath, setUsePath] = useState<string>();
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
   const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([
@@ -51,6 +58,8 @@ export default function DuplicateFile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
+
+
 
   const columns = [
     {
@@ -136,7 +145,8 @@ export default function DuplicateFile() {
   }
 
   async function openModal(info?: FileInfoType) {
-    setIsModalOpen(true);
+    initDB()
+    // setIsModalOpen(true);
     // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
     // console.log(133, res);
     // const res = await get_info_by_path('/Users/sysadmin/Downloads')
@@ -148,8 +158,8 @@ export default function DuplicateFile() {
       checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"],
       addType: "2131231231231"
     }); */
-    /* 
-    
+    /*
+
     {path: "/Users/sysadmin/Downloads", checkedTypeValues: ["音频", "图片"], checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"]}
 
 
@@ -171,17 +181,33 @@ Object Prototype
   }
 
   async function getFileList() {
-    const list = await get_all_history();
-    console.log(173, list);
-    const newFileList = list.map(item => {
+    const {data, total: localeTotal} = await get_all_history(current, total);
+    console.log(173, data);
+    const newFileList = data.map(item => {
       return {
         ...item,
         time: dayjs(item.time).format(DEFAULT_TIME_FORMAT)
       }
     })
     setFileList(newFileList)
+    setTotal(localeTotal)
   }
 
+
+  async function initDB() {
+    try {
+      const result = await db.execute(createSql.search_files);
+      console.log(179, result);
+    } catch (error) {
+      console.log(182, error);
+    }
+  }
+
+  const onPaginationChange: PaginationProps['onChange'] = (page) => {
+    console.log(page);
+    setCurrent(page);
+  };
+  
   return (
     <div className={styles.DuplicateFileBox}>
       <FileInfoEditer
@@ -219,7 +245,7 @@ Object Prototype
         />
       </Row>
       <Row justify="end" style={{ width: "100%", marginTop: "12px" }}>
-        <Pagination defaultCurrent={1} total={50} />
+        <Pagination current={current} total={total} onChange={onPaginationChange} />
       </Row>
     </div>
   );
