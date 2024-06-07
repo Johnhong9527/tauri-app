@@ -1,0 +1,2 @@
+export const DEFAULT_TIME_FORMAT = 'YYYY-MM-DD';
+export const DEFAULT_MONTH_FORMAT = 'YYYY-MM';

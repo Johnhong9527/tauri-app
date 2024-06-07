@@ -18,7 +18,9 @@ import { CopyText } from "@/components/Table/CopyText";
 import type { FixedType } from "rc-table/lib/interface";
 import FileInfoEditer from "./FileInfoEditer";
 import { FileInfoType } from "@/types/files";
-import { get_info_by_path, insertSeletedFileHistory } from "@/services";
+import { get_all_history, get_info_by_path, insertSeletedFileHistory } from "@/services";
+import dayjs from "dayjs";
+import { DEFAULT_TIME_FORMAT } from "@/config";
 
 const { Search } = Input;
 const { TextArea } = Input;
@@ -119,9 +121,13 @@ export default function DuplicateFile() {
     },
   ];
 
+  useEffect(() => {
+    getFileList()
+  }, [])
+
   async function handleOk(newFileInfo: FileInfoType) {
     console.log(180, newFileInfo);
-    const res = await insertSeletedFileHistory(newFileInfo.path);
+    const res = await insertSeletedFileHistory(newFileInfo.path, newFileInfo);
     console.log(133, res);
   }
   function handleCancel() {
@@ -162,6 +168,18 @@ Object Prototype
 
 
     */
+  }
+
+  async function getFileList() {
+    const list = await get_all_history();
+    console.log(173, list);
+    const newFileList = list.map(item => {
+      return {
+        ...item,
+        time: dayjs(item.time).format(DEFAULT_TIME_FORMAT)
+      }
+    })
+    setFileList(newFileList)
   }
 
   return (
