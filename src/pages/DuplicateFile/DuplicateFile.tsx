@@ -22,6 +22,10 @@ import { get_all_history, get_info_by_path, insertSeletedFileHistory } from "@/s
 import dayjs from "dayjs";
 import { DEFAULT_TIME_FORMAT } from "@/config";
 
+import Database from "tauri-plugin-sql-api";
+import { createSql } from "@/databases/createTableSql";
+const db = await Database.load("sqlite:test.db");
+
 const { Search } = Input;
 const { TextArea } = Input;
 
@@ -53,6 +57,8 @@ export default function DuplicateFile() {
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
   const [current, setCurrent] = useState(1)
   const [total, setTotal] = useState(0)
+
+
 
   const columns = [
     {
@@ -138,7 +144,8 @@ export default function DuplicateFile() {
   }
 
   async function openModal(info?: FileInfoType) {
-    setIsModalOpen(true);
+    initDB()
+    // setIsModalOpen(true);
     // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
     // console.log(133, res);
     // const res = await get_info_by_path('/Users/sysadmin/Downloads')
@@ -183,6 +190,15 @@ Object Prototype
     setFileList(newFileList)
   }
 
+
+  async function initDB() {
+    try {
+      const result = await db.execute(createSql.search_files);
+      console.log(179, result);
+    } catch (error) {
+      console.log(182, error);
+    }
+  }
   return (
     <div className={styles.DuplicateFileBox}>
       <FileInfoEditer

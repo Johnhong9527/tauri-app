@@ -1,47 +1,48 @@
 [package]
 name = "tauri-app"
 version = "0.0.1"
-description = "A Tauri App"
-authors = ["you"]
+description = "A System Tools Tauri App"
+authors = ["Johnhong9527"]
 license = ""
-repository = ""
+repository = "https://github.com/Johnhong9527/tauri-app.git"
 edition = "2021"
-rust-version = "1.57"
+rust-version = "1.78.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 # https://docs.rs/tensorflow/0.19.1/tensorflow/
 
 [build-dependencies]
-tauri-build = {version = "1.2", features = [] }
+tauri-build = {version = "1.5.2", features = [] }
 
 [dependencies]
-serde_json = "1.0"
+serde_json = "1.0.117"
 rusqlite = {version = "0.29.0", features = ["bundled"] }
-thiserror = "1.0"
+thiserror = "1.0.61"
 serde = { version = "1.0", features = ["derive"] }
-tauri = {version = "1.2", features = ["api-all"] }
-#tensorflow = { version = "0.19.1" }
-#tensorflow-sys = { version = "0.22.1", features = ["tensorflow_gpu"] }
-#tensorflow = { version = "0.19.1", features = ["tensorflow_gpu"] }
-#tensorflow-sys = "0.22.1"
-uuid = "1.2.2"
-regex = "1.7.0"
-crypto = "0.4.0"
-ring = "0.16.20"
-data-encoding = "2.3.3"
-sha2 = "0.10"
-digest = "0.10.6"
+tauri = {version = "1.5.2", features = ["api-all"] }
+uuid = "1.8.0"
+regex = "1.10.4"
+crypto = "0.5.1"
+ring = "0.17.8"
+data-encoding = "2.6.0"
+sha2 = "0.10.8"
+digest = "0.10.7"
 hex = "0.4.3"
 file_diff = "1.0.0"
 strsim = "0.10.0"
 diff = "0.1"
 anyhow = "1"
-async-trait = "0.1.68"
-tracing = "0.1.15"
-tracing-subscriber = { version = "0.3", features = ["fmt"] }
-lazy_static = "1.4"
-home = "0.5.4"
+async-trait = "0.1.80"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["fmt"] }
+lazy_static = "1.4.0"
+home = "0.5.9"
+
+[dependencies.tauri-plugin-sql]
+git = "https://github.com/tauri-apps/plugins-workspace"
+branch = "v1"
+features = ["sqlite"] # or "postgres", or "mysql"
 
 [workspace]
 #members = ["modules"]

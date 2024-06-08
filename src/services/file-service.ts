@@ -58,6 +58,7 @@ export async function get_info_by_path(path: string):Promise<[FileInfoType|boole
       "SELECT * FROM select_history WHERE path = :path",
       { ":path": path }
     );
+    console.log(3434, res);
 
     if(res.length) {
       return [res[0], ""];

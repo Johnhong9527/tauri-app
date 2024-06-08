@@ -1,8 +1,7 @@
 pub(crate) mod files;
 
 use tauri::{
-    plugin::{Builder, TauriPlugin},
-    Manager, Runtime,
+    plugin::{Builder, TauriPlugin}, Runtime,
 };
 
 use self::files::*;

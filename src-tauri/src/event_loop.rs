@@ -77,7 +77,6 @@ pub fn file_path(name: &str, parentid: &str) -> String {
 
 use sha2::{Digest, Sha256};
 use std::{fs, io};
-use tauri::api::http::FormPart::File;
 
 #[derive(Debug)]
 struct UseHashInfoStruct {
@@ -108,7 +107,7 @@ fn get_file_hase(path: &str) -> UseHashInfoStruct {
 
 fn read_file(path: &str) -> io::Result<Vec<u8>> {
     use std::fs::File;
-    use std::io::{self, Read};
+    use std::io::{Read};
     let mut file = File::open(path)?;
     let mut bytes = Vec::new();
     file.read_to_end(&mut bytes)?;
@@ -119,7 +118,7 @@ fn read_file(path: &str) -> io::Result<Vec<u8>> {
 
 fn create_file(path: &str, buf: &str) -> io::Result<()> {
     use std::fs::File;
-    use std::io::{self, Write};
+    use std::io::{Write};
     let mut file = File::create(path)?;
     // let file_byts = read_file("/Users/sysadmin/Downloads/文件相似度对比_new.pdf")?;
     file.write_all(buf.as_bytes())?;
@@ -138,11 +137,11 @@ fn jaccard(str1: &str, str2: &str) -> f64 {
 #[tauri::command(name = "file_sort")]
 // pub fn file_sort(path: &str) -> String {
 pub fn file_sort(path: &str)  {
-    use file_diff::{diff_files};
-    use std::io;
-    use std::io::prelude::*;
-    use std::fs::File;
-    use strsim::damerau_levenshtein;
+    
+    
+    
+    
+    
 
     // use strsim::{jaccard};
     let hash_info = get_file_hase(&path);
@@ -158,11 +157,11 @@ pub fn file_sort(path: &str)  {
     // let n1 = f1.read(&mut buffer[..]).unwrap();
     // let n2 = f2.read(&mut buffer[..]).unwrap();
     let bytes = read_file("/Users/sysadmin/Downloads/文件相似度对比_old.pdf").unwrap();
-    let mut bytes_str = format!("{:?}", bytes);
+    let bytes_str = format!("{:?}", bytes);
     // create_file("/Users/sysadmin/Downloads/文件相似度对比_old.md", &bytes_str);
     // let bytes2 = read_file("/Users/sysadmin/Downloads/文件相似度对比_new.pdf").unwrap();
     let bytes2 = read_file("/Users/sysadmin/Downloads/截屏2022-11-30 上午10.00.17 2.png").unwrap();
-    let mut  bytes2_str = format!("{:?}", bytes2);
+    let bytes2_str = format!("{:?}", bytes2);
     // create_file("/Users/sysadmin/Downloads/文件相似度对比_new.md", &bytes2_str);
 
 
