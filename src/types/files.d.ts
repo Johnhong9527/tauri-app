@@ -6,6 +6,9 @@ export interface FileInfoType {
   checkedSizeValues?: unknown[];
   checkboxSizeAll?: boolean;
   checkedTypeValues?: unknown[];
+  time?: string;
+  id?: number;
+  progress?: number;
 }
 
 export interface FileInfoEditerType {

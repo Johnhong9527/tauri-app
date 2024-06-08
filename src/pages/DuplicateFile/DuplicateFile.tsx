@@ -28,7 +28,7 @@ const { TextArea } = Input;
 export default function DuplicateFile() {
   const [usePath, setUsePath] = useState<string>();
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
-  const [fileList, setFileList] = useState<insertSearchFilesPasamsType[]>([
+  const [fileList, setFileList] = useState<FileInfoType[]>([
     {
       id: 1,
       path: "D:/code/wb_project/bar_association_app",
@@ -51,6 +51,8 @@ export default function DuplicateFile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
+  const [current, setCurrent] = useState(1)
+  const [total, setTotal] = useState(0)
 
   const columns = [
     {
@@ -58,8 +60,8 @@ export default function DuplicateFile() {
       dataIndex: "id",
       key: "id",
       width: 30,
-      render: (text: string, record: { id: number }) => (
-        <CopyText width="30px" color="#333" name={record.id}></CopyText>
+      render: (text: string, record: { id?: number }) => (
+        <CopyText width="30px" color="#333" name={record.id || ''}></CopyText>
       ),
     },
     {
@@ -67,12 +69,12 @@ export default function DuplicateFile() {
       dataIndex: "path",
       key: "path",
       width: 300,
-      render: (text: string, record: { path: string }) => (
+      render: (text: string, record: { path?: string }) => (
         <CopyText
           width="300px"
           ellipsisLine={1}
           color="#333"
-          name={record.path}
+          name={record.path || ''}
         ></CopyText>
       ),
     },
@@ -81,12 +83,12 @@ export default function DuplicateFile() {
       dataIndex: "time",
       key: "time",
       width: 100,
-      render: (text: string, record: { time: string }) => (
+      render: (text: string, record: { time?: string }) => (
         <CopyText
           width="100px"
           ellipsisLine={1}
           color="#333"
-          name={record.time}
+          name={record.time || ''}
         ></CopyText>
       ),
     },
@@ -95,7 +97,7 @@ export default function DuplicateFile() {
       dataIndex: "time",
       key: "time",
       with: 200,
-      render: (text: string, record: { progress: number }) => (
+      render: (text: string, record: { progress?: number }) => (
         <div style={{ width: "200px" }}>
           <Progress percent={record.progress} />
         </div>
@@ -148,8 +150,8 @@ export default function DuplicateFile() {
       checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"],
       addType: "2131231231231"
     }); */
-    /* 
-    
+    /*
+
     {path: "/Users/sysadmin/Downloads", checkedTypeValues: ["音频", "图片"], checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"]}
 
 
@@ -171,9 +173,8 @@ Object Prototype
   }
 
   async function getFileList() {
-    const list = await get_all_history();
-    console.log(173, list);
-    const newFileList = list.map(item => {
+    const {data: dataList, total} = await get_all_history(0, 10);
+    const newFileList = dataList.map(item => {
       return {
         ...item,
         time: dayjs(item.time).format(DEFAULT_TIME_FORMAT)

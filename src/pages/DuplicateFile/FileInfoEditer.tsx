@@ -52,11 +52,12 @@ export default function FileInfoEditer({
       multiple: false,
       defaultPath: await appDataDir(),
     });
+    console.log(55, selected);
 
     if (selected && selected.length) {
       setFileInfo({
         ...fileInfo,
-        path: selected[0],
+        path: `${selected}`,
       });
       // setUsePath(`${selected}`);
       // 最多记录 100 条用户操作的历史数据

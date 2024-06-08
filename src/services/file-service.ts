@@ -10,7 +10,7 @@ import { FileInfoType, historyListType, insertSearchFilesPasamsType } from "@/ty
  * @returns false 表示写入成功
  */
 export async function insertSeletedFileHistory(path?: string, fileInfoParams?: FileInfoType) {
-  /* 
+  /*
     addType: ".1231,.kidd"
     checkboxAll: true
     checkboxSizeAll: true
@@ -35,7 +35,7 @@ export async function insertSeletedFileHistory(path?: string, fileInfoParams?: F
         ":checkedTypeValues": fileInfoParams?.checkedTypeValues?.toString() || '',
         ":passType": fileInfoParams?.passType || '',
       }
-    );    
+    );
     return false;
   } catch (err) {
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
@@ -46,7 +46,7 @@ export async function insertSeletedFileHistory(path?: string, fileInfoParams?: F
 }
 
 /**
- * 
+ *
  * @param path 文件的路径
  * @returns FileInfoType
  */
@@ -58,9 +58,9 @@ export async function get_info_by_path(path: string):Promise<[FileInfoType|boole
       "SELECT * FROM select_history WHERE path = :path",
       { ":path": path }
     );
-    
+
     if(res.length) {
-      return [res[0], ""];  
+      return [res[0], ""];
     }
     return [false, "暂无数据"];
   } catch (err) {
@@ -106,14 +106,16 @@ export async function get_info_by_path(path: string):Promise<[FileInfoType|boole
 /**
  * 获取“select_history”表中的历史记录，并进行分页。
  * 此函数首先计算总记录数，然后根据提供的页码和页面大小参数返回相应的记录。
- * 
+ *
  * @param page 当前请求的页码，代表用户想要访问的数据页。
  * @param pageSize 每页展示的记录数量，决定了每次查询返回的数据条数。
  * @returns 返回一个对象，其中包含两个属性：
  *          - data: FileInfoType[] - 当前页的记录数据数组。
  *          - total: number - 表中的总记录数，用于前端计算总页数。
  */
-export async function get_all_history(page: number, pageSize: number): Promise<{ data: insertSearchFilesPasamsType[], total: number }> {
+export async function get_all_history(page: number, pageSize: number): Promise<{ data: FileInfoType[], total: number }> {
+  console.log(117, page, pageSize);
+
   await table_init(FILE_DB_PATH, "select_history");
   const DB = await SQLite.open(FILE_DB_PATH);
   // 查询总记录数
@@ -123,7 +125,7 @@ export async function get_all_history(page: number, pageSize: number): Promise<{
   const offset = (page - 1) * pageSize;
 
   // 获取当前页的数据
-  const data = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
+  const data = await DB.queryWithArgs<Array<FileInfoType>>(
     "SELECT * FROM select_history LIMIT ? OFFSET ?", [pageSize, offset]
   );
 
@@ -141,15 +143,15 @@ export async function get_list_by_sourceid(sourceId: number):Promise<[insertSear
       { ":sourceId": sourceId }
     );
     console.log(969696, sourceId);
-    
+
     /* const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
       "SELECT * FROM search_files WHERE sourceId = :sourceId GROUP BY hash HAVING COUNT(*) > 1",
       { ":sourceId": sourceid }
     ); */
     console.log(3434, res);
-    
+
     if(res.length) {
-      return [res, ""];  
+      return [res, ""];
     }
     return [false, "暂无数据"];
   } catch (err) {
