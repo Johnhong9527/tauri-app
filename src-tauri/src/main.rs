@@ -7,6 +7,7 @@ mod event_loop;
 mod self_plugin;
 mod common;
 mod utils;
+mod servics;
 
 
 use crate::menus::default::use_memu;
@@ -14,6 +15,7 @@ use crate::menus::event::m_event;
 use crate::event_loop::{greet, file_path, file_sort};
 use self_plugin::tauri_plugin_sqlite;
 use self_plugin::tauri_plugin_file;
+use servics::files_servics;
 
 
 use tauri::{Manager, generate_context};
@@ -59,6 +61,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_sqlite::init())
         .plugin(tauri_plugin_file::init())
+        .plugin(files_servics::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
             .add_migrations("sqlite:test.db", migrations)

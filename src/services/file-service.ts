@@ -35,7 +35,7 @@ export async function insertSeletedFileHistory(path?: string, fileInfoParams?: F
         ":checkedTypeValues": fileInfoParams?.checkedTypeValues?.toString() || '',
         ":passType": fileInfoParams?.passType || '',
       }
-    );    
+    );
     return false;
   } catch (err) {
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
@@ -46,7 +46,7 @@ export async function insertSeletedFileHistory(path?: string, fileInfoParams?: F
 }
 
 /**
- * 
+ *
  * @param path 文件的路径
  * @returns FileInfoType
  */
@@ -106,7 +106,7 @@ export async function get_info_by_path(path: string):Promise<[FileInfoType|boole
 /**
  * 获取“select_history”表中的历史记录，并进行分页。
  * 此函数首先计算总记录数，然后根据提供的页码和页面大小参数返回相应的记录。
- * 
+ *
  * @param page 当前请求的页码，代表用户想要访问的数据页。
  * @param pageSize 每页展示的记录数量，决定了每次查询返回的数据条数。
  * @returns 返回一个对象，其中包含两个属性：
@@ -125,7 +125,7 @@ export async function get_all_history(page?: number, pageSize?: number): Promise
   const offset = (page || 1 - 1) * (pageSize || 10);
 
   // 获取当前页的数据
-  const data = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
+  const data = await DB.queryWithArgs<Array<FileInfoType>>(
     "SELECT * FROM select_history LIMIT ? OFFSET ?", [pageSize, offset]
   );
 
