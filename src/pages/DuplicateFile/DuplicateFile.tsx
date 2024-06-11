@@ -19,7 +19,7 @@ import { CopyText } from "@/components/Table/CopyText";
 import type { FixedType } from "rc-table/lib/interface";
 import FileInfoEditer from "./FileInfoEditer";
 import { FileInfoType } from "@/types/files";
-import { get_all_history, get_info_by_path, insertSeletedFileHistory } from "@/services";
+import {get_all_history, get_info_by_path, insertSeletedFileHistory, updateSelectedFileHistory} from "@/services";
 import dayjs from "dayjs";
 import { DEFAULT_TIME_FORMAT } from "@/config";
 
@@ -37,7 +37,7 @@ export default function DuplicateFile() {
   const [usePath, setUsePath] = useState<string>();
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
   const [fileList, setFileList] = useState<FileInfoType[]>([
-    {
+    /*{
       id: 1,
       path: "D:/code/wb_project/bar_association_app",
       time: "2024-01-23",
@@ -54,7 +54,7 @@ export default function DuplicateFile() {
       path: "D:/code/wb_project/bar_association_app",
       time: "2024-01-23",
       progress: 90,
-    },
+    },*/
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
@@ -115,9 +115,9 @@ export default function DuplicateFile() {
       key: "actions",
       fixed: "right" as FixedType,
       width: 220,
-      render: () => (
+      render: (text: string, record: FileInfoType) => (
         <Space size="middle" style={{ width: "220px" }} align="baseline">
-          <Button onClick={() => setIsModalOpen(true)} type="default">
+          <Button onClick={() => openModal(record)} type="default">
             修改
           </Button>
           <Button type="primary">运行</Button>
@@ -133,10 +133,27 @@ export default function DuplicateFile() {
     getFileList()
   }, [current])
 
-  async function handleOk(newFileInfo: FileInfoType) {
-    console.log(180, newFileInfo);
-    const res = await insertSeletedFileHistory(newFileInfo.path, newFileInfo);
-    console.log(133, res);
+  async function handleOk(newFileInfo: FileInfoType, callback?: Function) {
+    try {
+      console.log(180, newFileInfo);
+      let method = insertSeletedFileHistory
+      if(fileInfoSource && JSON.stringify(fileInfoSource) !== '{}') {
+        method = updateSelectedFileHistory
+      }
+      const res = await method(newFileInfo.path, newFileInfo);
+      console.log(133, res);
+      if(res) {
+        message.error(`${res}`)
+        return
+      }
+      setIsModalOpen(false);
+      setFileInfoSource({})
+      setFileList([])
+      await getFileList();
+      callback && callback();
+    } catch (err) {
+    }
+
   }
   function handleCancel() {
     setFileInfo({});
@@ -145,7 +162,17 @@ export default function DuplicateFile() {
 
   async function openModal(info?: FileInfoType) {
     // initDB()
-    // setIsModalOpen(true);
+    setIsModalOpen(true);
+    if(info) {
+      console.log(165, info)
+      setFileInfoSource({
+        ...info,
+        checkedSizeValues: info && info?.checkedSizeValues ? `${info.checkedSizeValues}`.split(',') : [],
+        checkedTypeValues: info && info?.checkedTypeValues ? `${info.checkedTypeValues}`.split(',') : []
+      })
+    }
+    // const [fileInfo, msg] = await get_info_by_path('/Users/honghaitao/Downloads')
+    // console.log(161, fileInfo);
     // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
     // console.log(133, res);
     // const res = await get_info_by_path('/Users/sysadmin/Downloads')
@@ -178,7 +205,6 @@ Object Prototype
 
     */
   }
-
   async function getFileList() {
     console.log(183, current, total);
     const {data, total: localeTotal} = await get_all_history(current - 1, 10);

@@ -37,6 +37,7 @@ export default function FileInfoEditer({
   const { TextArea } = Input;
   useEffect(() => {
     setIsModalOpen(showModal);
+    console.log(4040, fileInfoSource)
     if (JSON.stringify(fileInfoSource) !== "{}" && showModal) {
       setFileInfo(fileInfoSource);
     }
