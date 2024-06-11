@@ -87,13 +87,13 @@ pub fn get_all_directory(path: String) -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-#[command]
-fn getFileType(file_path: String) -> Option<String> {
-    let path = Path::new(&file_path);
-    path.extension()
-        .and_then(|ext| ext.to_str())
-        .map(|ext| ext.to_lowercase())
-}
+// #[command]
+// fn getFileType(file_path: String) -> Option<String> {
+//     let path = Path::new(&file_path);
+//     path.extension()
+//         .and_then(|ext| ext.to_str())
+//         .map(|ext| ext.to_lowercase())
+// }
 
 #[command]
 pub fn get_file_type(file_path: &str) -> Option<&str> {

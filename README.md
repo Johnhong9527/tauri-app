@@ -41,3 +41,7 @@ This template should help get you started developing with Tauri, React and Types
 sqlite3 版本表结构迁移
 https://blog.csdn.net/cdc8596/article/details/94732238
 /Users/sysadmin/.system_tools/sqlite
+
+https://crates.io/search?q=sqlite
+
+https://github.com/launchbadge/sqlx

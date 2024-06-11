@@ -19,7 +19,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             execute_batch,
             execute
         ])
-        .setup(|app| {
+        .setup(|_app| {
             // app.manage(SqliteMap::default());
             Ok(())
         })

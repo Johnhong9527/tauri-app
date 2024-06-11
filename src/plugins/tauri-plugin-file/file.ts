@@ -1,10 +1,13 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
+import Database from "tauri-plugin-sql-api";
+
 export class File {
   path: string;
 
   constructor(path: string) {
     this.path = path;
+    this.db = await Database.load("sqlite:files.db");
   }
 
   static async getAllList(path: string): Promise<string[]> {

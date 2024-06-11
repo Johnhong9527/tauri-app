@@ -13,7 +13,7 @@ mod servics;
 use crate::menus::default::use_memu;
 use crate::menus::event::m_event;
 use crate::event_loop::{greet, file_path, file_sort};
-use self_plugin::tauri_plugin_sqlite;
+// use self_plugin::tauri_plugin_sqlite;
 use self_plugin::tauri_plugin_file;
 use servics::files_servics;
 
@@ -25,46 +25,13 @@ use tauri::api::path::app_data_dir;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 fn main() {
-    let migrations = vec![
-        // Define your migrations here
-        Migration {
-            version: 1,
-            description: "create_initial_tables",
-            sql: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 2,
-            description: "create_initial_tables",
-            sql: "ALTER TABLE 'users' ADD 'addType' TEXT;ALTER TABLE 'users' ADD 'userTime' TEXT;",
-            kind: MigrationKind::Up,
-        }
-        // Migration {
-        //     version: 3,
-        //     description: "create_initial_tables",
-        //     sql: "ALTER TABLE users DROP COLUMN userTime;",
-        //     kind: MigrationKind::Up,
-        // },
-        // Migration {
-        //     version: 4,
-        //     description: "create_initial_tables",
-        //     sql: "ALTER TABLE 'users' ADD 'addType' TEXT;",
-        //     kind: MigrationKind::Up,
-        // },
-        // Migration {
-        //     version: 5,
-        //     description: "create_initial_tables",
-        //     sql: "ALTER TABLE 'users' ADD 'addType2' TEXT;",
-        //     kind: MigrationKind::Up,
-        // }
-    ];
     tauri::Builder::default()
-        .plugin(tauri_plugin_sqlite::init())
+        // .plugin(tauri_plugin_sqlite::init())
         .plugin(tauri_plugin_file::init())
         .plugin(files_servics::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
-            .add_migrations("sqlite:test.db", migrations)
+            .add_migrations("sqlite:files.db", files_servics::migrations::set_files_migrations())
         .build()
     )
 

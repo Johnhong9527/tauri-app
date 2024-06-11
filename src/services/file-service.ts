@@ -1,5 +1,6 @@
 import { table_init } from "@/databases/index";
-import { SQLite } from "@/plugins/tauri-plugin-sqlite";
+// import { SQLite } from "@/plugins/tauri-plugin-sqlite";
+import Database from "tauri-plugin-sql-api";
 import { FILE_DB_PATH } from "@/config";
 import { FileInfoType, historyListType, insertSearchFilesPasamsType } from "@/types/files";
 
@@ -20,8 +21,10 @@ export async function insertSeletedFileHistory(path?: string, fileInfoParams?: F
     path: "/Users/sysadmin/Downloads"
  */
   try {
-    await table_init(FILE_DB_PATH, "select_history");
-    const DB = await SQLite.open(FILE_DB_PATH);
+    // await table_init(FILE_DB_PATH, "select_history");
+
+    const DB = await Database.load("sqlite:files.db");
+    // const DB = await SQLite.open(FILE_DB_PATH);
     await DB.execute(
       `INSERT INTO select_history (time, name, path, addType, checkboxAll, checkboxSizeAll, checkedSizeValues, checkedTypeValues, passType) VALUES (:time, :name, :path, :addType, :checkboxAll, :checkboxSizeAll, :checkedSizeValues, :checkedTypeValues, :passType)`,
       {
@@ -52,8 +55,9 @@ export async function insertSeletedFileHistory(path?: string, fileInfoParams?: F
  */
 export async function get_info_by_path(path: string):Promise<[FileInfoType|boolean, string]>{
   try {
-    await table_init(FILE_DB_PATH, "select_history");
-    const DB = await SQLite.open(FILE_DB_PATH);
+    // await table_init(FILE_DB_PATH, "select_history");
+    // const DB = await SQLite.open(FILE_DB_PATH);
+    const DB = await Database.load("sqlite:files.db");
     const res = await DB.queryWithArgs<Array<FileInfoType>>(
       "SELECT * FROM select_history WHERE path = :path",
       { ":path": path }
@@ -116,19 +120,23 @@ export async function get_info_by_path(path: string):Promise<[FileInfoType|boole
 export async function get_all_history(page?: number, pageSize?: number): Promise<{
   [x: string]: any; data: insertSearchFilesPasamsType[], total: number 
 }> {
-  await table_init(FILE_DB_PATH, "select_history");
-  const DB = await SQLite.open(FILE_DB_PATH);
+  // await table_init(FILE_DB_PATH, "select_history");
+  const DB = await Database.load("sqlite:files.db");
+
   // 查询总记录数
-  const totalResult = await DB.queryWithArgs<Array<{ total: number }>>("SELECT COUNT(*) AS total FROM select_history");
+  const totalResult = await DB.select("SELECT COUNT(*) AS total FROM select_history");
+  console.log(128, totalResult);
+  // [Log] 128 – {lastInsertId: 0, rowsAffected: 0} (file-service.ts, line 51)
   const total = totalResult[0].total;  // 获取总记录数
   // 计算分页偏移量
   const offset = (page || 1 - 1) * (pageSize || 10);
 
   // 获取当前页的数据
-  const data = await DB.queryWithArgs<Array<FileInfoType>>(
+  const data = await DB.select(
     "SELECT * FROM select_history LIMIT ? OFFSET ?", [pageSize, offset]
   );
-
+  console.log(138, data, pageSize, offset)
+  DB.close()
   return { data, total };  // 返回包含数据和总记录数的对象
 }
 
@@ -136,9 +144,10 @@ export async function get_all_history(page?: number, pageSize?: number): Promise
 
 export async function get_list_by_sourceid(sourceId: number):Promise<[insertSearchFilesPasamsType[]|false, string]>{
   try {
-    await table_init(FILE_DB_PATH, "select_history");
-    const DB = await SQLite.open(FILE_DB_PATH);
-    const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
+    // await table_init(FILE_DB_PATH, "select_history");
+    // const DB = await SQLite.open(FILE_DB_PATH);
+    const DB = await Database.load("sqlite:test.db");
+    const res = await DB.execute(
       "SELECT * FROM search_files WHERE sourceId = :sourceId",
       { ":sourceId": sourceId }
     );

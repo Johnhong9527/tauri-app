@@ -26,6 +26,7 @@ import { DEFAULT_TIME_FORMAT } from "@/config";
 import Database from "tauri-plugin-sql-api";
 import { createSql } from "@/databases/createTableSql";
 const db = await Database.load("sqlite:test.db");
+const filesDB = await Database.load("sqlite:files.db");
 
 const { Search } = Input;
 const { TextArea } = Input;
@@ -58,10 +59,6 @@ export default function DuplicateFile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
-  const [current, setCurrent] = useState(1)
-  const [total, setTotal] = useState(0)
-
-
 
   const columns = [
     {
@@ -134,7 +131,7 @@ export default function DuplicateFile() {
 
   useEffect(() => {
     getFileList()
-  }, [])
+  }, [current])
 
   async function handleOk(newFileInfo: FileInfoType) {
     console.log(180, newFileInfo);
@@ -147,7 +144,7 @@ export default function DuplicateFile() {
   }
 
   async function openModal(info?: FileInfoType) {
-    initDB()
+    // initDB()
     // setIsModalOpen(true);
     // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
     // console.log(133, res);
@@ -183,7 +180,8 @@ Object Prototype
   }
 
   async function getFileList() {
-    const {data, total: localeTotal} = await get_all_history(current, total);
+    console.log(183, current, total);
+    const {data, total: localeTotal} = await get_all_history(current - 1, 10);
     console.log(173, data);
     const newFileList = data.map(item => {
       return {
@@ -192,13 +190,14 @@ Object Prototype
       }
     })
     setFileList(newFileList)
+    console.log(192, localeTotal);
     setTotal(localeTotal)
   }
 
 
   async function initDB() {
     try {
-      const result = await db.execute(createSql.search_files);
+      const result = await filesDB.execute(createSql.search_files);
       console.log(179, result);
     } catch (error) {
       console.log(182, error);

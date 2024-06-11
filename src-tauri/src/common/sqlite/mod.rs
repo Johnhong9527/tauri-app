@@ -14,12 +14,12 @@ lazy_static::lazy_static! {
 }
 
 // 打开数据库连接
-pub async fn open(path: &String) -> Result<Arc<Mutex<Connection>>> {
+pub async fn open(path: &str) -> Result<Arc<Mutex<Connection>>> {
     open_with_flags(path, OpenFlags::default()).await
 }
 
 // 打开带有标志的数据库连接
-pub async fn open_with_flags(path: &String, flags: OpenFlags) -> Result<Arc<Mutex<Connection>>> {
+pub async fn open_with_flags(path: &str, flags: OpenFlags) -> Result<Arc<Mutex<Connection>>> {
     // 判断是否已经打开
     let exist = CONNECTIONS.read().unwrap().contains_key(path);
 
@@ -32,7 +32,7 @@ pub async fn open_with_flags(path: &String, flags: OpenFlags) -> Result<Arc<Mute
     } else {
         // 构造数据库路径
         let mut storage_path = crate::utils::system_tools_home_path()?.join("sqlite");
-        storage_path.push(path.clone());
+        storage_path.push(path.to_string());
 
         let prefix = storage_path.parent().unwrap_or(storage_path.as_path());
         std::fs::create_dir_all(prefix).map_err(|err| anyhow::anyhow!(err))?;
@@ -45,7 +45,7 @@ pub async fn open_with_flags(path: &String, flags: OpenFlags) -> Result<Arc<Mute
 
         // 将连接缓存
         let mut cache = CONNECTIONS.write().unwrap();
-        cache.insert(path.clone(), arc_conn.clone());
+        cache.insert(path.parse()?, arc_conn.clone());
 
         Ok(arc_conn)
     }

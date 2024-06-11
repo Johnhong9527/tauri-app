@@ -12,7 +12,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             get_all_directory,get_file_type_by_path,calculate_file_hash
         ])
-        .setup(|app| {
+        .setup(|_app| {
             // app.manage(SqliteMap::default());
             Ok(())
         })

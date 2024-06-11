@@ -17,7 +17,7 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     use std::path::Path;
     use std::time::SystemTime;
     // 生成 UUID
-    let uuid = Uuid::new_v4();
+    let _uuid = Uuid::new_v4();
 
     // let err = is_create("files");
     // println!("2424  {}", err);
@@ -28,7 +28,7 @@ pub fn file_path(name: &str, parentid: &str) -> String {
     // }
 
     let system_time = SystemTime::now();
-    let timestamp = system_time
+    let _timestamp = system_time
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("Failed to get timestamp");
 
@@ -144,7 +144,7 @@ pub fn file_sort(path: &str)  {
     
 
     // use strsim::{jaccard};
-    let hash_info = get_file_hase(&path);
+    let _hash_info = get_file_hase(&path);
     // let mut file1 = match fs::File::open("/Users/sysadmin/Downloads/文件相似度对比_old.pdf") {
     //     Ok(f) => f,
     //     Err(e) => panic!("{}", e),

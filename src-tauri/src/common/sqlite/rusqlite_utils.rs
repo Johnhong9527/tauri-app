@@ -44,7 +44,7 @@ pub fn rusqlite_row_to_value(row: &Row<'_>, cnt: usize) -> Result<Vec<Value>> {
             Integer(i64_v) => Value::Number(Number::from(i64_v)), // 整数
             Real(f64_v) => Value::Number(Number::from_f64(f64_v).map_or(Number::from(0i64), |r| r)), // 浮点数
             Text(str_v) => Value::String(String::from_utf8(str_v.to_vec()).unwrap()), // 文本
-            Blob(v) => Value::Null, // 二进制数据（这里处理为 Null）
+            Blob(_v) => Value::Null, // 二进制数据（这里处理为 Null）
         };
         cols.push(idns_value); // 将转换后的值添加到列集合中
     }

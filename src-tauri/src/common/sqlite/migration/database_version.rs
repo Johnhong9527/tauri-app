@@ -107,7 +107,7 @@ pub struct NormalDdlDatabaseVersionSql {
 
 impl NormalDdlDatabaseVersionSql {
     // 创建一个新实例
-    pub fn new(version: u32, ddl: Vec<String>) -> Self {
+    fn new(version: u32, ddl: Vec<String>) -> Self {
         Self { version, ddl }
     }
 }
