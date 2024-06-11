@@ -1,8 +1,19 @@
-pub mod file_struct;
-// pub use FileStruct;
+pub(crate) mod files;
 
-pub mod file_sqlite3;
-// pub use file_sqlite3::file_sqlite3;
+use tauri::{
+    plugin::{Builder, TauriPlugin}, Runtime,
+};
 
-pub mod file_tools;
-// pub mod file_tools::file_tools;
+use self::file_sqlite3::*;
+
+/// Initializes the plugin.
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    Builder::new("st-files")
+        .invoke_handler(tauri::generate_handler![
+          is_create,create,inset
+        ])
+        .setup(|app| {
+            Ok(())
+        })
+        .build()
+}

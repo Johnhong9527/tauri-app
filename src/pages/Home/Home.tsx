@@ -1,7 +1,7 @@
 import {useState, useCallback, useEffect} from "react";
 import reactLogo from "../../assets/react.svg";
-import {invoke} from "@tauri-apps/api/tauri";
-// import {createDir, BaseDirectory} from '@tauri-apps/api/fs';
+import {invoke} from "core";
+// import {createDir, BaseDirectory} from '@tauri-apps/plugin-fs';
 // Create the `$APPDATA/users` directory
 import {  homeDir } from '@tauri-apps/api/path';
 // import "./App.css";

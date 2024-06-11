@@ -1,19 +1,18 @@
-pub(crate) mod files;
+pub(crate) mod file_sqlite3;
 
 use tauri::{
     plugin::{Builder, TauriPlugin}, Runtime,
 };
 
-use self::files::*;
+use self::file_sqlite3::*;
 
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::new("st-files")
+    Builder::new("ss-files")
         .invoke_handler(tauri::generate_handler![
-            get_all_directory,get_file_type_by_path,calculate_file_hash
+          is_create,create,inset
         ])
         .setup(|app| {
-            // app.manage(SqliteMap::default());
             Ok(())
         })
         .build()

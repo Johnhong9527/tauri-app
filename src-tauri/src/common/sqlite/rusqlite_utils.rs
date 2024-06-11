@@ -5,11 +5,10 @@ use rusqlite::{
     types::ValueRef::{Blob, Integer, Null, Real, Text}, // SQLite 值引用类型
     Connection,
     Params,
-    Row,
-    ToSql, // 引入 SQLite 连接、参数、行和 ToSql 类型
+    Row, // 引入 SQLite 连接、参数、行和 ToSql 类型
 };
 use serde_json::{Number, Value}; // 引入 JSON 处理库
-use std::{collections::HashMap, sync::Mutex}; // 引入 HashMap 和 Mutex
+use std::{collections::HashMap}; // 引入 HashMap 和 Mutex
 
 // 查询单个值
 pub fn query_one_value<P, V>(connection: &Connection, sql: &str, p: P) -> Result<V>

@@ -2,8 +2,7 @@ pub(crate) mod sqlite;
 //  as tauri_plugin_sqlite;
 
 use tauri::{
-    plugin::{Builder, TauriPlugin},
-    Manager, Runtime,
+    plugin::{Builder, TauriPlugin}, Runtime,
 };
 
 use self::sqlite::*;
