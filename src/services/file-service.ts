@@ -99,6 +99,31 @@ export async function get_info_by_path(path: string): Promise<[FileInfoType | bo
     }
 }
 
+/**
+ *
+ * @param path 文件的路径
+ * @returns FileInfoType
+ */
+export async function get_info_by_id(id: number): Promise<[FileInfoType | boolean, string]> {
+    try {
+        // await table_init(FILE_DB_PATH, "select_history");
+        // const DB = await SQLite.open(FILE_DB_PATH);
+        const DB = await Database.load("sqlite:files.db");
+        const res = await DB.select(
+            "SELECT * FROM select_history WHERE id = $1", [id]
+        );
+        if (Array.isArray(res)) {
+            return [res[0], ""];
+        }
+        return [false, "暂无数据"];
+    } catch (err) {
+        if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
+            return [false, "当前路径重复"];
+        }
+        return [false, `${err}`];
+    }
+}
+
 // export async function getSource(path: string) {
 
 // }

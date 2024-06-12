@@ -1,3 +1,5 @@
+import {StepProps} from "antd/es/steps";
+
 export interface FileInfoType {
   path?: string;
   checkboxAll?: boolean;
@@ -35,3 +37,11 @@ export type historyListType = {
   name: string;
   hash: string;
 };
+
+
+export type stepsStatusType = {
+  scanDir: StepProps.status;
+  fileOptions: StepProps.status;
+  duplicateFiles: StepProps.status;
+  done: StepProps.status;
+}

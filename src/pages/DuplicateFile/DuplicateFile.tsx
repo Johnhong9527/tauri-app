@@ -33,6 +33,8 @@ import { DEFAULT_TIME_FORMAT } from "@/config";
 
 import Database from "tauri-plugin-sql-api";
 import { createSql } from "@/databases/createTableSql";
+import {useRoutes} from "react-router";
+import {useNavigate} from "react-router-dom";
 const db = await Database.load("sqlite:test.db");
 const filesDB = await Database.load("sqlite:files.db");
 
@@ -48,6 +50,7 @@ export default function DuplicateFile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
+  const navigate = useNavigate()
 
   const columns = [
     {
@@ -109,7 +112,7 @@ export default function DuplicateFile() {
           <Button onClick={() => openModal(record)} type="default">
             修改
           </Button>
-          <Button type="primary">运行</Button>
+          <Button type="primary" onClick={() => calculateDuplicateFiles(record)}>运行</Button>
 
           <Popconfirm
               title="Delete the task"
@@ -192,7 +195,11 @@ export default function DuplicateFile() {
   const onPaginationChange: PaginationProps['onChange'] = (page) => {
     setCurrent(page);
   };
-  
+
+
+  function calculateDuplicateFiles(record: FileInfoType) {
+    navigate('calculate/' + record.id)
+  }
   return (
     <div className={styles.DuplicateFileBox}>
       <FileInfoEditer

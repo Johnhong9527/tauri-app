@@ -1,19 +1,18 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
 import Database from "tauri-plugin-sql-api";
+import {FileInfoType} from "@/types/files";
 
 export class File {
   path: string;
 
   constructor(path: string) {
     this.path = path;
-    this.db = await Database.load("sqlite:files.db");
   }
 
-  static async getAllList(path: string): Promise<string[]> {
-    console.log(11,path);
+  static async getAllList(fileInfo: FileInfoType): Promise<string[]> {
     return await invoke<string[]>("plugin:st-files|get_all_directory", {
-      path,
+      fileInfo,
     });
   }
   static async getType(path: string): Promise<string> {

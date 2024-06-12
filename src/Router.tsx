@@ -9,6 +9,7 @@ import FileSort from "@/pages/FileSort/FileSort";
 import FileClear from "@/pages/FileClear/FileClear";
 import DuplicateFileIndex from "@/pages/DuplicateFile/Index";
 import DuplicateFile from "@/pages/DuplicateFile/DuplicateFile";
+import CalculateDuplicateFiles from "@/pages/DuplicateFile/CalculateDuplicateFiles";
 import DuplicateFileInfo from "@/pages/DuplicateFile/FileInfo";
 /* export default function Router() {
   return (
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
           {
             path: "info/:fileId",
             element: <DuplicateFileInfo />,
+          },
+          {
+            path: "calculate/:fileId",
+            element: <CalculateDuplicateFiles />,
           }
         ]
       },

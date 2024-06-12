@@ -1,13 +1,13 @@
 use std::fs;
-// use crypto::digest::Digest;
-// use crypto::sha2::Sha256;
 use ring::digest::{Context, Digest, SHA256};
-use serde::Serialize;
-use serde::Serializer;
-use std::path::Path;
-use std::path::PathBuf;
-// use tauri::api::path::resolve_path;
+use serde::{Serialize, Serializer, Deserialize};
+use std::io::{self, Read};
+use sha2::{Sha256, Digest as OtherDigest};  // 确保导入 `Digest`
+use hex;
 use tauri::command;
+use std::path::{Path, PathBuf};
+use std::result::Result as new_Result;
+// use std::result::Result;
 // use tauri::api::file::IntoInvokeHandler;
 
 #[derive(Debug, thiserror::Error)]
@@ -48,43 +48,81 @@ fn filter_other_directory(path: &str, directories: &[&str]) -> bool {
     true
 }
 
-fn read_files_in_directory(directory: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
-    if let Ok(entries) = fs::read_dir(directory) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.is_file()
-                    && filter_other_directory(
-                        path.display().to_string().as_str(),
-                        &[".obsidian", ".DS_Store"],
-                    )
-                {
-                    // 过滤文件
-                    // TODO 后续加上需要过滤的文件
-                    println!("59{}", path.display());
-                    files.push(path.clone());
-                } else if path.is_dir()
-                    && filter_other_directory(
-                        path.display().to_string().as_str(),
-                        &["node_modules", ".git", ".obsidian", ".DS_Store"],
-                    )
-                {
-                    // 过滤 目录
-                    // println!("{}", path.display());
-                    read_files_in_directory(&path, files)?;
-                }
-            }
-        }
-    }
-    Ok(())
+// fn read_files_in_directory(directory: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
+//     if let Ok(entries) = fs::read_dir(directory) {
+//         for entry in entries {
+//             if let Ok(entry) = entry {
+//                 let path = entry.path();
+//                 if path.is_file()
+//                     && filter_other_directory(
+//                         path.display().to_string().as_str(),
+//                         &[".obsidian", ".DS_Store"],
+//                     )
+//                 {
+//                     // 过滤文件
+//                     // TODO 后续加上需要过滤的文件
+//                     println!("59{}", path.display());
+//                     files.push(path.clone());
+//                 } else if path.is_dir()
+//                     && filter_other_directory(
+//                         path.display().to_string().as_str(),
+//                         &["node_modules", ".git", ".obsidian", ".DS_Store"],
+//                     )
+//                 {
+//                     // 过滤 目录
+//                     // println!("{}", path.display());
+//                     read_files_in_directory(&path, files)?;
+//                 }
+//             }
+//         }
+//     }
+//     Ok(())
+// }
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum FileSizeCategory {
+    Huge,       // 4GB+
+    VeryLarge,  // 1GB to 4GB-
+    Large,      // 128MB to 1GB-
+    Medium,     // 1MB to 128MB-
+    Small,      // 16KB to 1MB-
+    Tiny,       // 1B to 16KB-
+    Empty,      // Empty files or directories
 }
 
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct FileInfo {
+    pub path: Option<String>,
+    pub checkbox_all: Option<bool>,
+    pub add_type: Option<String>,
+    pub pass_type: Option<String>,
+    // pub checked_size_values: Option<Vec<String>>, // 假设值类型为 String，具体类型视情况调整
+    pub checked_size_values: Option<Vec<FileSizeCategory>>, // 使用正确的类型
+    pub checkbox_size_all: Option<bool>,
+    pub checked_type_values: Option<Vec<String>>, // 同上
+    pub time: Option<String>,
+    pub id: Option<u32>,
+    pub progress: Option<f32>,
+}
+
+
 #[command]
-pub fn get_all_directory(path: String) -> Result<Vec<PathBuf>> {
-    let directory = Path::new(&path);
+pub fn get_all_directory(file_info: FileInfo) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
-    read_files_in_directory(directory, &mut files)?;
-    Ok(files)
+    if let Some(ref path) = file_info.path {
+        println!("Processing directory: {}", path);
+        let directory = Path::new(path);
+        // 确保 read_files_in_directory 能返回一个 Result<(), Error>
+        read_files_in_directory(directory, &mut files, &file_info.checked_size_values)?;
+        Ok(files)
+    } else {
+        // 当没有提供路径时返回错误
+        // Err(Error::new(std::io::ErrorKind::NotFound, "No path provided"))
+        Ok(files)
+    }
 }
 
 // #[command]
@@ -110,12 +148,52 @@ pub fn get_file_type_by_path(file_path: String) -> Result<String> {
     }
 }
 
+fn read_files_in_directory(dir: &Path, files: &mut Vec<PathBuf>, filters: &Option<Vec<FileSizeCategory>>) -> Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                read_files_in_directory(&path, files, filters)?;
+            } else {
+                if let Ok(metadata) = fs::metadata(&path) {
+                    let size = metadata.len();
+                    if filters.is_none() || file_size_matches(size, filters.as_ref().unwrap()) {
+                        files.push(path);
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+
+fn file_size_matches(size: u64, categories: &Vec<FileSizeCategory>) -> bool {
+    categories.iter().any(|category| match category {
+        FileSizeCategory::Huge => size >= 4294967296,
+        FileSizeCategory::VeryLarge => size >= 1073741824 && size < 4294967296,
+        FileSizeCategory::Large => size >= 134217728 && size < 1073741823,
+        FileSizeCategory::Medium => size >= 1048576 && size < 134217728,
+        FileSizeCategory::Small => size >= 16384 && size < 1048576,
+        FileSizeCategory::Tiny => size >= 1 && size < 16384,
+        FileSizeCategory::Empty => size == 0,
+    })
+}
+
 #[command]
 pub fn calculate_file_hash(file_path: String) -> Result<String> {
-    let file_bytes = fs::read(file_path).expect("无法读取文件");
-    let mut hasher = Context::new(&SHA256);
+    // 使用 `?` 代替 `.expect` 来优雅地处理错误
+    let file_bytes = fs::read(file_path)?;
+
+    // 初始化 SHA256 哈希上下文
+    let mut hasher = Sha256::new();
     hasher.update(&file_bytes);
-    let digest: Digest = hasher.finish();
-    let hash = hex::encode(digest.as_ref());
+
+    // 完成哈希计算
+    let result = hasher.finalize();
+
+    // 将结果转换为十六进制字符串
+    let hash = hex::encode(result);
     Ok(hash)
 }
