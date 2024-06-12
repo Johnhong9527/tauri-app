@@ -193,3 +193,23 @@ export async function get_list_by_sourceid(sourceId: number): Promise<[insertSea
         return [false, `${err}`];
     }
 }
+
+
+export async function delSelectedFileHistory(path?: string) {
+    try {
+        const DB = await Database.load("sqlite:files.db");
+        const result = await DB.execute(
+            `DELETE FROM select_history WHERE path = $1`, [
+                path,                  // 假设 path 变量是预定义的
+            ],
+        );
+        console.log(206, result)
+        return false;
+    } catch (error) {
+        console.log(595959, error)
+        if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+            return "当前数据格式异常";
+        }
+        return error;
+    }
+}

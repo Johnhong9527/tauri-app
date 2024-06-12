@@ -11,7 +11,9 @@ import {
   Progress,
   Pagination,
   PaginationProps,
+  Popconfirm,
 } from "antd";
+import type { PopconfirmProps } from 'antd';
 import { useEffect, useState } from "react";
 const { Option } = Select;
 import { historyListType, insertSearchFilesPasamsType } from "@/types/files";
@@ -19,7 +21,13 @@ import { CopyText } from "@/components/Table/CopyText";
 import type { FixedType } from "rc-table/lib/interface";
 import FileInfoEditer from "./FileInfoEditer";
 import { FileInfoType } from "@/types/files";
-import {get_all_history, get_info_by_path, insertSeletedFileHistory, updateSelectedFileHistory} from "@/services";
+import {
+  delSelectedFileHistory,
+  get_all_history,
+  get_info_by_path,
+  insertSeletedFileHistory,
+  updateSelectedFileHistory
+} from "@/services";
 import dayjs from "dayjs";
 import { DEFAULT_TIME_FORMAT } from "@/config";
 
@@ -36,26 +44,7 @@ export default function DuplicateFile() {
   const [current, setCurrent] = useState(1); // 页码
   const [usePath, setUsePath] = useState<string>();
   const [historyList, setHistoryList] = useState<historyListType[]>([]);
-  const [fileList, setFileList] = useState<FileInfoType[]>([
-    /*{
-      id: 1,
-      path: "D:/code/wb_project/bar_association_app",
-      time: "2024-01-23",
-      progress: 80,
-    },
-    {
-      id: 2,
-      path: "D:/code/wb_project/bar_association_app",
-      time: "2024-01-23",
-      progress: 20,
-    },
-    {
-      id: 3,
-      path: "D:/code/wb_project/bar_association_app",
-      time: "2024-01-23",
-      progress: 90,
-    },*/
-  ]);
+  const [fileList, setFileList] = useState<FileInfoType[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
@@ -121,9 +110,18 @@ export default function DuplicateFile() {
             修改
           </Button>
           <Button type="primary">运行</Button>
-          <Button type="primary" danger>
-            删除
-          </Button>
+
+          <Popconfirm
+              title="Delete the task"
+              description="Are you sure to delete this task?"
+              onConfirm={() => delRow(record)}
+              okText="Yes"
+              cancelText="No"
+          >
+            <Button type="primary" danger>
+              删除
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -135,13 +133,11 @@ export default function DuplicateFile() {
 
   async function handleOk(newFileInfo: FileInfoType, callback?: Function) {
     try {
-      console.log(180, newFileInfo);
       let method = insertSeletedFileHistory
       if(fileInfoSource && JSON.stringify(fileInfoSource) !== '{}') {
         method = updateSelectedFileHistory
       }
       const res = await method(newFileInfo.path, newFileInfo);
-      console.log(133, res);
       if(res) {
         message.error(`${res}`)
         return
@@ -160,55 +156,29 @@ export default function DuplicateFile() {
     setIsModalOpen(false);
   }
 
+  async function delRow(row: FileInfoType) {
+    const res = await delSelectedFileHistory(row.path)
+    if(!res) {
+      setFileInfoSource({})
+      setFileList([])
+      await getFileList();
+    } else {
+      message.error(`${res}`)
+    }
+  }
+
   async function openModal(info?: FileInfoType) {
-    // initDB()
     setIsModalOpen(true);
     if(info) {
-      console.log(165, info)
       setFileInfoSource({
         ...info,
         checkedSizeValues: info && info?.checkedSizeValues ? `${info.checkedSizeValues}`.split(',') : [],
         checkedTypeValues: info && info?.checkedTypeValues ? `${info.checkedTypeValues}`.split(',') : []
       })
     }
-    // const [fileInfo, msg] = await get_info_by_path('/Users/honghaitao/Downloads')
-    // console.log(161, fileInfo);
-    // const res = await insertSeletedFileHistory('/Users/sysadmin/Downloads');
-    // console.log(133, res);
-    // const res = await get_info_by_path('/Users/sysadmin/Downloads')
-    // console.log(135, res)
-    /* setIsModalOpen(true);
-    setFileInfoSource({
-      path: "/Users/sysadmin/Downloads",
-      checkedTypeValues: ["音频", "图片"],
-      checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"],
-      addType: "2131231231231"
-    }); */
-    /*
-
-    {path: "/Users/sysadmin/Downloads", checkedTypeValues: ["音频", "图片"], checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）"]}
-
-
-    [Log] 180 (FileInfoEditer.tsx, line 69)
-Object
-
-addType: "2131231231231"
-
-checkedSizeValues: ["巨大（4GB+）", "大（128MB ~ 1GB-）", "中（1MB ~ 128MB-）"] (3)
-
-checkedTypeValues: ["音频", "图片"] (2)
-
-path: "/Users/sysadmin/Downloads"
-
-Object Prototype
-
-
-    */
   }
   async function getFileList() {
-    console.log(183, current, total);
     const {data, total: localeTotal} = await get_all_history(current - 1, 10);
-    console.log(173, data);
     const newFileList = data.map(item => {
       return {
         ...item,
@@ -216,22 +186,10 @@ Object Prototype
       }
     })
     setFileList(newFileList)
-    console.log(192, localeTotal);
     setTotal(localeTotal)
   }
 
-
-  async function initDB() {
-    try {
-      const result = await filesDB.execute(createSql.search_files);
-      console.log(179, result);
-    } catch (error) {
-      console.log(182, error);
-    }
-  }
-
   const onPaginationChange: PaginationProps['onChange'] = (page) => {
-    console.log(page);
     setCurrent(page);
   };
   
