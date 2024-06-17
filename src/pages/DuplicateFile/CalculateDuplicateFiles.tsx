@@ -6,7 +6,7 @@ import {
     updateSelectedFileHistory
 } from "@/services";
 import {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {FileInfoType, stepsStatusType} from "@/types/files";
 import {message} from "@tauri-apps/api/dialog";
 import styles from './CalculateDuplicateFiles.module.less'
@@ -17,12 +17,13 @@ import { readDir, BaseDirectory } from '@tauri-apps/api/fs';
 
 export default function CalculateDuplicateFiles() {
     let {fileId} = useParams();
+    let navigate = useNavigate();
     const [fileInfo, setFileInfo] = useState<FileInfoType>({})
-    const [current, setCurrent] = useState(0);
-    const [percent, setPercent] = useState(0);
+    const [current, setCurrent] = useState(1);
+    const [percent, setPercent] = useState(85);
     const [stepsStatus, setStepsStatus] = useState<stepsStatusType>({
-        scanDir: 'wait',
-        fileOptions: 'wait',
+        scanDir: 'finish',
+        fileOptions: 'process',
         duplicateFiles: 'wait',
         done: 'wait',
     })
@@ -59,11 +60,12 @@ export default function CalculateDuplicateFiles() {
         }
     }
     async function scanDirAll() {
-        if(fileInfo.path) {
-            console.log(626262, fileInfo)
-            const files = await File.getAllList(fileInfo);
-            console.log(636363, files)
-        }
+        navigate('/calculate-list/' + fileId)
+        // if(fileInfo.path) {
+        //     console.log(626262, fileInfo)
+        //     const files = await File.getAllList(fileInfo);
+        //     console.log(636363, files)
+        // }
     }
 
     return (

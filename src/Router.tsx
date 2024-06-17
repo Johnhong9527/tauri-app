@@ -11,6 +11,8 @@ import DuplicateFileIndex from "@/pages/DuplicateFile/Index";
 import DuplicateFile from "@/pages/DuplicateFile/DuplicateFile";
 import CalculateDuplicateFiles from "@/pages/DuplicateFile/CalculateDuplicateFiles";
 import DuplicateFileInfo from "@/pages/DuplicateFile/FileInfo";
+// import CalculateListPage from "@/pages/DuplicateFile/CalculateListPage";
+import CalculateListPage from '@/pages/DuplicateFile/CalculateListPage'
 /* export default function Router() {
   return (
     <Routes>
@@ -59,6 +61,10 @@ const router = createBrowserRouter([
           {
             path: "calculate/:fileId",
             element: <CalculateDuplicateFiles />,
+          },
+          {
+            path: "calculate-list/:fileId",
+            element: <CalculateListPage />,
           }
         ]
       },
