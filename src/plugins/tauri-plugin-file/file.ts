@@ -10,7 +10,8 @@ export class File {
     this.path = path;
   }
 
-  static async getAllList(fileInfo: FileInfoType): Promise<string[]> {
+  // static async getAllList(fileInfo: FileInfoType): Promise<string[]> {
+  static async getAllList(fileInfo: any): Promise<string[]> {
     return await invoke<string[]>("plugin:st-files|get_all_directory", {
       fileInfo,
     });

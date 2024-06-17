@@ -85,8 +85,8 @@ export default function FileInfoEditer({
     const otherTypes = [
       "其他所有带扩展名的类型",
       "其他所有无扩展名的类型",
-      "指定",
-      "排除",
+      // "指定",
+      // "排除",
     ];
     const checkedValues = fileTypeList.map((typeInfo) => typeInfo.name);
     setFileInfo({
@@ -111,6 +111,7 @@ export default function FileInfoEditer({
     checkedValues
   ) => {
     console.log("checked = ", checkedValues);
+    // TODO 全选、全不选的交互 等主体功能完善之后, 再开发
     setFileInfo({
       ...fileInfo,
       checkedTypeValues: checkedValues,

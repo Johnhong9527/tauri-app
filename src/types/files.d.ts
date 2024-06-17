@@ -22,11 +22,14 @@ export interface FileInfoEditerType {
 }
 
 export type insertSearchFilesPasamsType = {
-  id: number;
+  id?: number;
   sourceId?: number | string | any;
   path: string;
-  time: string;
-  progress: number;
+  time?: string;
+  // progress: number;
+  type: string,
+  name: string,
+  hash: string
 };
 
 export type historyListType = {

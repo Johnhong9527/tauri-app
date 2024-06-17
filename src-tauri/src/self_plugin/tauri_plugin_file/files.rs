@@ -1,12 +1,12 @@
-use std::fs;
-use ring::digest::{Context, Digest, SHA256};
-use serde::{Serialize, Serializer, Deserialize};
-use std::io::{self, Read};
-use sha2::{Sha256, Digest as OtherDigest};  // 确保导入 `Digest`
 use hex;
-use tauri::command;
+use ring::digest::{Context, Digest, SHA256};
+use serde::{Deserialize, Serialize, Serializer};
+use sha2::{Digest as OtherDigest, Sha256}; // 确保导入 `Digest`
+use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use std::result::Result as new_Result;
+use std::{fs, option};
+use tauri::command;
 // use std::result::Result;
 // use tauri::api::file::IntoInvokeHandler;
 
@@ -79,19 +79,16 @@ fn filter_other_directory(path: &str, directories: &[&str]) -> bool {
 //     Ok(())
 // }
 
-
 #[derive(Debug, Deserialize, Serialize)]
 pub enum FileSizeCategory {
-    Huge,       // 4GB+
-    VeryLarge,  // 1GB to 4GB-
-    Large,      // 128MB to 1GB-
-    Medium,     // 1MB to 128MB-
-    Small,      // 16KB to 1MB-
-    Tiny,       // 1B to 16KB-
-    Empty,      // Empty files or directories
+    Huge,      // 4GB+
+    VeryLarge, // 1GB to 4GB-
+    Large,     // 128MB to 1GB-
+    Medium,    // 1MB to 128MB-
+    Small,     // 16KB to 1MB-
+    Tiny,      // 1B to 16KB-
+    Empty,     // Empty files or directories
 }
-
-
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FileInfo {
@@ -106,8 +103,8 @@ pub struct FileInfo {
     pub time: Option<String>,
     pub id: Option<u32>,
     pub progress: Option<f32>,
+    pub types: Option<Vec<String>>,
 }
-
 
 #[command]
 pub fn get_all_directory(file_info: FileInfo) -> Result<Vec<PathBuf>> {
@@ -116,7 +113,12 @@ pub fn get_all_directory(file_info: FileInfo) -> Result<Vec<PathBuf>> {
         println!("Processing directory: {}", path);
         let directory = Path::new(path);
         // 确保 read_files_in_directory 能返回一个 Result<(), Error>
-        read_files_in_directory(directory, &mut files, &file_info.checked_size_values)?;
+        read_files_in_directory(
+            directory,
+            &mut files,
+            &file_info.checked_size_values,
+            &file_info.types,
+        )?;
         Ok(files)
     } else {
         // 当没有提供路径时返回错误
@@ -148,17 +150,25 @@ pub fn get_file_type_by_path(file_path: String) -> Result<String> {
     }
 }
 
-fn read_files_in_directory(dir: &Path, files: &mut Vec<PathBuf>, filters: &Option<Vec<FileSizeCategory>>) -> Result<()> {
+fn read_files_in_directory(
+    dir: &Path,
+    files: &mut Vec<PathBuf>,
+    filters: &Option<Vec<FileSizeCategory>>,
+    types: &Option<Vec<String>>,
+) -> Result<()> {
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                read_files_in_directory(&path, files, filters)?;
+                read_files_in_directory(&path, files, filters, types)?;
             } else {
                 if let Ok(metadata) = fs::metadata(&path) {
                     let size = metadata.len();
-                    if filters.is_none() || file_size_matches(size, filters.as_ref().unwrap()) {
+                    let size_matches = filters.is_none() || file_size_matches(size, filters.as_ref().unwrap());
+                    let type_matches = types.is_none() || file_type_matches(&path, types.as_ref().unwrap());
+
+                    if size_matches && type_matches {
                         files.push(path);
                     }
                 }
@@ -168,8 +178,7 @@ fn read_files_in_directory(dir: &Path, files: &mut Vec<PathBuf>, filters: &Optio
     Ok(())
 }
 
-
-fn file_size_matches(size: u64, categories: &Vec<FileSizeCategory>) -> bool {
+/* fn file_size_matches(size: u64, categories: &Vec<FileSizeCategory>) -> bool {
     categories.iter().any(|category| match category {
         FileSizeCategory::Huge => size >= 4294967296,
         FileSizeCategory::VeryLarge => size >= 1073741824 && size < 4294967296,
@@ -179,6 +188,28 @@ fn file_size_matches(size: u64, categories: &Vec<FileSizeCategory>) -> bool {
         FileSizeCategory::Tiny => size >= 1 && size < 16384,
         FileSizeCategory::Empty => size == 0,
     })
+} */
+/// Determines if the given size matches any of the specified categories.
+fn file_size_matches(size: u64, categories: &Vec<FileSizeCategory>) -> bool {
+    use FileSizeCategory::*;
+    categories.iter().any(|category| match category {
+        Huge => size >= 4_294_967_296,
+        VeryLarge => (1_073_741_824..4_294_967_296).contains(&size),
+        Large => (134_217_728..1_073_741_824).contains(&size),
+        Medium => (1_048_576..134_217_728).contains(&size),
+        Small => (16_384..1_048_576).contains(&size),
+        Tiny => (1..16_384).contains(&size),
+        Empty => size == 0,
+    })
+}
+
+fn file_type_matches(path: &Path, types: &Vec<String>) -> bool {
+    if let Some(ext) = path.extension() {
+        if let Some(ext_str) = ext.to_str() {
+            return types.iter().any(|type_str| type_str == ext_str);
+        }
+    }
+    false
 }
 
 #[command]
