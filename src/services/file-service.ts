@@ -30,8 +30,9 @@ export async function insertSeletedFileHistory(
    */
   try {
     // await table_init(FILE_DB_PATH, "select_history");
-
     const DB = await Database.load("sqlite:files.db");
+    // 创建表
+    await DB.execute(createSql.select_history);
     // const DB = await SQLite.open(FILE_DB_PATH);
     await DB.execute(
       `INSERT INTO select_history (time, name, path, addType, checkboxAll, checkboxSizeAll, checkedSizeValues, checkedTypeValues, passType) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -63,6 +64,8 @@ export async function updateSelectedFileHistory(
 ) {
   try {
     const DB = await Database.load("sqlite:files.db");
+    // 创建表
+    await DB.execute(createSql.select_history);
     const result = await DB.execute(
       `UPDATE select_history 
              SET addType = $1, checkboxAll = $2, checkboxSizeAll = $3, checkedSizeValues = $4, checkedTypeValues = $5, passType = $6 
@@ -99,6 +102,8 @@ export async function get_info_by_path(
     // await table_init(FILE_DB_PATH, "select_history");
     // const DB = await SQLite.open(FILE_DB_PATH);
     const DB = await Database.load("sqlite:files.db");
+    // 创建表
+    await DB.execute(createSql.select_history);
     const res = await DB.select(
       "SELECT * FROM select_history WHERE path = $1",
       [path]
@@ -127,6 +132,8 @@ export async function get_info_by_id(
     // await table_init(FILE_DB_PATH, "select_history");
     // const DB = await SQLite.open(FILE_DB_PATH);
     const DB = await Database.load("sqlite:files.db");
+    // 创建表
+    await DB.execute(createSql.select_history);
     const res = await DB.select("SELECT * FROM select_history WHERE id = $1", [
       id,
     ]);
@@ -155,7 +162,7 @@ export async function insertSearchFiles({
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
-    // await DB.execute(createSql.search_files);
+    await DB.execute(createSql.search_files);
     await DB.execute(
       "INSERT into search_files (time, sourceId, name,type,path,hash, db_version) VALUES ($1, $2, $3, $4, $5, $6, $7)",
       [new Date().getTime(), sourceId, path, type, name, hash, "1"]
@@ -190,7 +197,8 @@ export async function get_all_history(
 }> {
   // await table_init(FILE_DB_PATH, "select_history");
   const DB = await Database.load("sqlite:files.db");
-
+  // 创建表
+  await DB.execute(createSql.select_history);
   // 查询总记录数
   const totalResult = await DB.select(
     "SELECT COUNT(*) AS total FROM select_history"
@@ -266,24 +274,25 @@ export async function searchDuplicateFile({ sourceId }: { sourceId: string }) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
-    // await DB.execute(createSql.search_files);
+    await DB.execute(createSql.search_files);
     /* 
     select * from search_files where sourceId = $1 in (select sourceId from search_files group by hash having count(hash) > 1)
  */
     // const res = await DB.select("SELECT * from search_files WHERE sourceId = $1", [sourceId]);
     const res = await DB.select(
-//       `SELECT sf.*
-// FROM search_files sf
-// JOIN (
-//     SELECT hash
-//     FROM search_files
-//     WHERE sourceId = $1
-//     GROUP BY hash
-//     HAVING COUNT(*) > 1
-// ) dup ON sf.hash = dup.hash
-// WHERE sf.sourceId = $1;
-// `,
-`SELECT hash, 
+      //       `SELECT sf.*
+      // FROM search_files sf
+      // JOIN (
+      //     SELECT hash
+      //     FROM search_files
+      //     WHERE sourceId = $1
+      //     GROUP BY hash
+      //     HAVING COUNT(*) > 1
+      // ) dup ON sf.hash = dup.hash
+      // WHERE sf.sourceId = $1;
+      // `,
+      `SELECT hash,
+        sourceId,
         GROUP_CONCAT(id) AS ids, 
         GROUP_CONCAT(path) AS paths,
         GROUP_CONCAT(time) AS times,

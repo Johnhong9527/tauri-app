@@ -1,5 +1,5 @@
 export const createSql = {
-    select_history: `CREATE TABLE select_history (
+    select_history: `CREATE TABLE IF NOT EXISTS select_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         time TIMESTAMP,
         name TEXT CHECK(length(name) <= 255),
@@ -12,7 +12,7 @@ export const createSql = {
         checkedTypeValues TEXT,
         UNIQUE (path)
     );`,
-    search_files: `CREATE TABLE search_files (
+    search_files: `CREATE TABLE IF NOT EXISTS search_files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         time TIMESTAMP,
         sourceId INTEGER,
