@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use std::result::Result as new_Result;
 use std::{fs, option};
 use tauri::command;
+use std::time::{SystemTime, UNIX_EPOCH};
 // use std::result::Result;
 // use tauri::api::file::IntoInvokeHandler;
 
@@ -165,8 +166,10 @@ fn read_files_in_directory(
             } else {
                 if let Ok(metadata) = fs::metadata(&path) {
                     let size = metadata.len();
-                    let size_matches = filters.is_none() || file_size_matches(size, filters.as_ref().unwrap());
-                    let type_matches = types.is_none() || file_type_matches(&path, types.as_ref().unwrap());
+                    let size_matches =
+                        filters.is_none() || file_size_matches(size, filters.as_ref().unwrap());
+                    let type_matches =
+                        types.is_none() || file_type_matches(&path, types.as_ref().unwrap());
 
                     if size_matches && type_matches {
                         files.push(path);

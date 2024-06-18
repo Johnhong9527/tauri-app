@@ -270,7 +270,27 @@ export async function delSelectedFileHistory(path?: string) {
   }
 }
 
-export async function searchDuplicateFile({ sourceId }: { sourceId: string }) {
+/* 
+count: 6, 
+                    hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", 
+                    paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg", 
+                    ids: "17,21,22,26,27,31", 
+                    times: "1718613803964,1718613804035,1718613804041,1718613804070,1718613804080,1718613804112"
+*/
+type DuplicateFileInfo = {
+  count: number;
+  hash: string;
+  paths: string[];
+  ids: string[];
+};
+
+type SearchResult = [boolean, DuplicateFileInfo[] | string | unknown];
+
+export async function searchDuplicateFile({
+  sourceId,
+}: {
+  sourceId: string;
+}): Promise<SearchResult> {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
@@ -279,33 +299,24 @@ export async function searchDuplicateFile({ sourceId }: { sourceId: string }) {
     select * from search_files where sourceId = $1 in (select sourceId from search_files group by hash having count(hash) > 1)
  */
     // const res = await DB.select("SELECT * from search_files WHERE sourceId = $1", [sourceId]);
-    const res = await DB.select(
-      //       `SELECT sf.*
-      // FROM search_files sf
-      // JOIN (
-      //     SELECT hash
-      //     FROM search_files
-      //     WHERE sourceId = $1
-      //     GROUP BY hash
-      //     HAVING COUNT(*) > 1
-      // ) dup ON sf.hash = dup.hash
-      // WHERE sf.sourceId = $1;
-      // `,
+    const res: DuplicateFileInfo[] = await DB.select(
       `SELECT hash,
-        sourceId,
-        GROUP_CONCAT(id) AS ids, 
-        GROUP_CONCAT(path) AS paths,
-        GROUP_CONCAT(time) AS times,
-        COUNT(*) AS count
-    FROM search_files
-    WHERE sourceId = $1
-    GROUP BY hash
-    HAVING COUNT(*) > 1;
+       sourceId,
+       GROUP_CONCAT(id)    AS ids,
+       GROUP_CONCAT(path)  AS paths,
+       GROUP_CONCAT(time)  AS times,
+       COUNT(*)           AS count
+FROM search_files
+WHERE sourceId = $1
+  AND hash IS NOT NULL  
+  AND hash != "''"
+  AND hash != ""
+GROUP BY hash, sourceId
+HAVING COUNT(*) > 1;
 `,
       [sourceId]
     );
     console.log(285, res);
-
     return Promise.resolve([true, res]);
   } catch (err) {
     console.log(145, err);
@@ -314,4 +325,23 @@ export async function searchDuplicateFile({ sourceId }: { sourceId: string }) {
     }
     return Promise.resolve([false, err]);
   }
+}
+
+export default async function get_progress_by_sourceId(
+  sourceId: string
+): Promise<any> {
+  const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+  // 创建表
+  await DB.execute(createSql.search_files);
+
+  const res: DuplicateFileInfo[] = await DB.select(
+    `SELECT 
+    COUNT(*) AS total_entries,
+    COUNT(CASE WHEN sourceId = $1 THEN 1 ELSE NULL END) AS sourceId_1_count,
+    COUNT(CASE WHEN hash IS NULL OR hash = '' THEN 1 ELSE NULL END) AS hash_null_count
+FROM search_files;`,
+    [sourceId]
+  );
+
+  return res;
 }

@@ -20,6 +20,7 @@ export const createSql = {
         name TEXT,
         path TEXT,
         hash TEXT,
-        db_version TEXT
+        db_version TEXT,
+        UNIQUE (path)
     );`
 }

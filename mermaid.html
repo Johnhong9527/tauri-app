@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sequence Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad: true});</script>
+</head>
+<body>
+    <div class="mermaid">
+        sequenceDiagram
+        登录用户->>杭律云后台: 用户端登录App时后,通过接口发送获取到的CID
+        登录用户->>杭律云后台: 完成相关事件, 触发后台推送服务
+        杭律云后台->>uniapp提供的推送服务器: 调用推送接口,携带用户ID、CID、事件类型、编号和具体推送内容描述
+        uniapp提供的推送服务器-->>登录用户: 在用户设备展示推送内容
+    </div>
+</body>
+</html>

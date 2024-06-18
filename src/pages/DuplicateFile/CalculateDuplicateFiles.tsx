@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import { readDir, BaseDirectory } from "@tauri-apps/api/fs";
 import { fileTypeList } from "./config";
+import get_progress_by_sourceId from "@/services/file-service";
 
 export default function CalculateDuplicateFiles() {
   let { fileId } = useParams();
@@ -68,45 +69,14 @@ export default function CalculateDuplicateFiles() {
     }
   }
   async function scanDirAll() {
-    const searchDuplicateFileRes =  await searchDuplicateFile({
-        sourceId: fileId || ''
-    })
-    /* 
-        [
-            {count: 6, hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", ids: "17,21,22,26,27,31", },
-            {count: 6, hash: "75b7c31709e1529be7bec1c8a40ec98edbda146a09904a5ffad8685da966f90b", ids: "19,23,24,25,29,30", },
-            {count: 3, hash: "7707b032ff2fea855a1bc22b7be536de13d3ad6d418cc7021893a97cf488e1a3", ids: "20,28,32", }
-        ]
-
-
-
-        [
-            {
-                count: 6, 
-                hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", 
-                paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg", 
-                ids: "17,21,22,26,27,31", 
-                times: "1718613803964,1718613804035,1718613804041,1718613804070,1718613804080,1718613804112"
-            },
-            {
-                hash: "75b7c31709e1529be7bec1c8a40ec98edbda146a09904a5ffad8685da966f90b", 
-                times: "1718613804012,1718613804051,1718613804057,1718613804063,1718613804094,1718613804104", 
-                paths: "/Users/sysadmin/Pictures/test/欧洲2.jpeg,/Users/sysa…3.jpeg,/Users/sysadmin/Pictures/test/欧洲2_副本2.jpeg", 
-                ids: "19,23,24,25,29,30", 
-                count: 6
-            }
-            {
-                times: "1718613804018,1718613804086,1718613804118", 
-                ids: "20,28,32", 
-                paths: "/Users/sysadmin/Pictures/test/欧洲1_副本2.jpeg,/Users/…洲1.jpeg,/Users/sysadmin/Pictures/test/欧洲1_副本.jpeg", 
-                count: 3, 
-                hash: "7707b032ff2fea855a1bc22b7be536de13d3ad6d418cc7021893a97cf488e1a3"
-            }
-        ] 
-
-    */
-    console.log(747474, searchDuplicateFileRes);
+    const resInfo = await File.getInfo("/Users/sysadmin/Downloads/google-cloud-cli-455.0.0-darwin-arm.tar.gz")
+    console.log(7373, resInfo);
     return
+    // const aabb = await get_progress_by_sourceId(`${fileId}`);
+    // console.log(737373, aabb);
+    
+    // return
+    
     // navigate('/calculate-list/' + fileId)
     if (fileInfo.path) {
       // 扫描目录文件
@@ -135,7 +105,8 @@ export default function CalculateDuplicateFiles() {
             console.log(95, currentFile);
             // 获取文件类型和哈希
             const type = await File.getType(currentFile);
-            const hash = await File.getHash(currentFile);
+            // const hash = await File.getHash(currentFile);
+            const hash = '';
             return insertSearchFiles({
               // 组装数据
               sourceId: `${fileId}`,
@@ -153,6 +124,45 @@ export default function CalculateDuplicateFiles() {
 
 
         // 分析重复文件
+        const searchDuplicateFileRes =  await searchDuplicateFile({
+            sourceId: fileId || ''
+        })
+        /* 
+            [
+                {count: 6, hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", ids: "17,21,22,26,27,31", },
+                {count: 6, hash: "75b7c31709e1529be7bec1c8a40ec98edbda146a09904a5ffad8685da966f90b", ids: "19,23,24,25,29,30", },
+                {count: 3, hash: "7707b032ff2fea855a1bc22b7be536de13d3ad6d418cc7021893a97cf488e1a3", ids: "20,28,32", }
+            ]
+    
+    
+    
+            [
+                {
+                    count: 6, 
+                    hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", 
+                    paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg", 
+                    ids: "17,21,22,26,27,31", 
+                    times: "1718613803964,1718613804035,1718613804041,1718613804070,1718613804080,1718613804112"
+                },
+                {
+                    hash: "75b7c31709e1529be7bec1c8a40ec98edbda146a09904a5ffad8685da966f90b", 
+                    times: "1718613804012,1718613804051,1718613804057,1718613804063,1718613804094,1718613804104", 
+                    paths: "/Users/sysadmin/Pictures/test/欧洲2.jpeg,/Users/sysa…3.jpeg,/Users/sysadmin/Pictures/test/欧洲2_副本2.jpeg", 
+                    ids: "19,23,24,25,29,30", 
+                    count: 6
+                }
+                {
+                    times: "1718613804018,1718613804086,1718613804118", 
+                    ids: "20,28,32", 
+                    paths: "/Users/sysadmin/Pictures/test/欧洲1_副本2.jpeg,/Users/…洲1.jpeg,/Users/sysadmin/Pictures/test/欧洲1_副本.jpeg", 
+                    count: 3, 
+                    hash: "7707b032ff2fea855a1bc22b7be536de13d3ad6d418cc7021893a97cf488e1a3"
+                }
+            ] 
+    
+        */
+        console.log(747474, searchDuplicateFileRes);
+        if(searchDuplicateFileRes[0]) {}
       }
     }
   }

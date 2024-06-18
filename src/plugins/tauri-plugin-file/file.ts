@@ -27,6 +27,12 @@ export class File {
       filePath: path,
     });
   }
+  
+  static async getInfo(path: string): Promise<any> {
+    return await invoke<string>("plugin:st-files|get_file_info_by_path", {
+      filePath: path,
+    });
+  }
 
   // async close(): Promise<boolean> {
   //     return await invoke('plugin:st-sqlite|close', { path: this.path })
