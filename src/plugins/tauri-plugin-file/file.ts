@@ -29,7 +29,7 @@ export class File {
   }
   
   static async getInfo(path: string): Promise<any> {
-    return await invoke<string>("plugin:st-files|get_file_info_by_path", {
+    return await invoke<string>("plugin:st-files|get_file_info", {
       filePath: path,
     });
   }

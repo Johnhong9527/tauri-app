@@ -220,12 +220,14 @@ export async function get_all_history(
 }
 
 export async function get_list_by_sourceid(
-  sourceId: number
+  sourceId: string
 ): Promise<[insertSearchFilesPasamsType[] | false, string]> {
   try {
     // await table_init(FILE_DB_PATH, "select_history");
     // const DB = await SQLite.open(FILE_DB_PATH);
-    const DB = await Database.load("sqlite:test.db");
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
     const res = await DB.execute(
       "SELECT * FROM search_files WHERE sourceId = $1",
       [sourceId]

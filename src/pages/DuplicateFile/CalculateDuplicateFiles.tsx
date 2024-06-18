@@ -22,7 +22,7 @@ import {
 } from "@ant-design/icons";
 import { readDir, BaseDirectory } from "@tauri-apps/api/fs";
 import { fileTypeList } from "./config";
-import get_progress_by_sourceId from "@/services/file-service";
+import get_progress_by_sourceId, { get_list_by_sourceid } from "@/services/file-service";
 
 export default function CalculateDuplicateFiles() {
   let { fileId } = useParams();
@@ -69,9 +69,7 @@ export default function CalculateDuplicateFiles() {
     }
   }
   async function scanDirAll() {
-    const resInfo = await File.getInfo("/Users/sysadmin/Downloads/google-cloud-cli-455.0.0-darwin-arm.tar.gz")
-    console.log(7373, resInfo);
-    return
+ 
     // const aabb = await get_progress_by_sourceId(`${fileId}`);
     // console.log(737373, aabb);
     
@@ -107,6 +105,19 @@ export default function CalculateDuplicateFiles() {
             const type = await File.getType(currentFile);
             // const hash = await File.getHash(currentFile);
             const hash = '';
+            /* 
+              const resInfo = await File.getInfo("/Users/sysadmin/Downloads/google-cloud-cli-455.0.0-darwin-arm.tar.gz")
+              console.log(7373, resInfo);
+              return
+                    Object: {
+                      file_name: "google-cloud-cli-455.0.0-darwin-arm.tar.gz",
+                      file_path: "/Users/sysadmin/Downloads/google-cloud-cli-455.0.0-darwin-arm.tar.gz",
+                      file_size: 119890163,
+                      file_type: "gz",
+                      modified_time: 1701394601,
+                      Object Prototype,
+                    }
+            */
             return insertSearchFiles({
               // 组装数据
               sourceId: `${fileId}`,
@@ -121,7 +132,10 @@ export default function CalculateDuplicateFiles() {
         );
 
         console.log(result); // 顺序处理每个项，然后输出最终结果
-
+        // 计算文件具体内容
+        const allList = await get_list_by_sourceid(`${fileId}`)
+        console.log(137, allList);
+        
 
         // 分析重复文件
         const searchDuplicateFileRes =  await searchDuplicateFile({

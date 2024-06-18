@@ -231,3 +231,37 @@ pub fn calculate_file_hash(file_path: String) -> Result<String> {
     let hash = hex::encode(result);
     Ok(hash)
 }
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FileInfos {
+    file_path: PathBuf,
+    file_name: Option<String>,
+    file_type: Option<String>,
+    file_size: u64,
+    modified_time: Option<u64>, // 时间戳形式
+}
+
+#[command]
+pub fn get_file_info(file_path: String) -> Result<FileInfos> {
+    let path = Path::new(&file_path);
+
+    // 正确地处理错误
+    let metadata = fs::metadata(&path)?;
+
+    // 获取文件修改时间
+    let modified_time = metadata.modified().ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+
+    // 构造FileInfo结构
+    let file_info = FileInfos {
+        file_path: path.to_path_buf(),
+        file_name: path.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()),
+        file_type: get_file_type(&file_path).map(|t| t.to_string()),
+        file_size: metadata.len(),
+        modified_time,
+    };
+
+    Ok(file_info)
+}
