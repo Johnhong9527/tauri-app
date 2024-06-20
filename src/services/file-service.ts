@@ -447,6 +447,27 @@ export async function get_fileInfo_by_id(id: string, sourceId: string) {
   }
 }
 
+
+export async function get_fileInfo_by_path(path: string, sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    const res = await DB.select("SELECT * FROM search_files WHERE path = $1 and sourceId = $2", [
+      path, sourceId
+    ]);
+    if (Array.isArray(res) && res.length) {
+      return [res[0], ""];
+    }
+    return [false, "暂无数据"];
+  } catch (err) {
+    if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
+      return [false, "当前路径重复"];
+    }
+    return [false, `${err}`];
+  }
+}
+
 export async function del_file_by_id(path: string, sourceId: string) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);

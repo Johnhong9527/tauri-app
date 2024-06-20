@@ -28,6 +28,7 @@ import {
 import { readDir, BaseDirectory } from "@tauri-apps/api/fs";
 import { fileTypeList } from "./config";
 import get_progress_by_sourceId, {
+  get_fileInfo_by_path,
   get_list_by_sourceid,
   updateFileHsah,
 } from "@/services/file-service";
@@ -117,8 +118,6 @@ export default function CalculateDuplicateFiles() {
       setPercent(100);
       console.log('扫描目录文件 结束');
 
-      
-
       console.log(118, files);
 
       // 计算文件属性
@@ -140,25 +139,29 @@ export default function CalculateDuplicateFiles() {
           async (prevPromise: any, currentFile: any) => {
             // 等待上一个 Promise 完成
             await prevPromise;
-            // 获取文件类型和哈希
-            const fileInfo = await File.getInfo(currentFile);
-            // const hash = await File.getHash(currentFile);
-            const hash = "";
-            fileIndex++;
-            setPercent(Math.floor((fileIndex / allFilesLength) * 100));
-            // await waittime(300);
-            return insertSearchFiles({
-              // 组装数据
-              sourceId: `${fileId}`,
-              path: currentFile,
-              // type: await File.getType(elm),
-              name: fileInfo.file_name,
-              creation_time: fileInfo.creation_time,
-              modified_time: fileInfo.modified_time,
-              file_size: fileInfo.file_size,
-              type: fileInfo.file_type,
-              hash,
-            });
+            const [ishaveFile, fileinfo] = await get_fileInfo_by_path(currentFile, `${fileId}`)
+            if(!ishaveFile) {
+              // 获取文件类型和哈希
+              const fileInfo = await File.getInfo(currentFile);
+              // const hash = await File.getHash(currentFile);
+              const hash = "";
+              fileIndex++;
+              setPercent(Math.floor((fileIndex / allFilesLength) * 100));
+              // await waittime(300);
+              return insertSearchFiles({
+                // 组装数据
+                sourceId: `${fileId}`,
+                path: currentFile,
+                // type: await File.getType(elm),
+                name: fileInfo.file_name,
+                creation_time: fileInfo.creation_time,
+                modified_time: fileInfo.modified_time,
+                file_size: fileInfo.file_size,
+                type: fileInfo.file_type,
+                hash,
+              });
+            }
+            return Promise.resolve(0) 
           },
           Promise.resolve(0)
         );
