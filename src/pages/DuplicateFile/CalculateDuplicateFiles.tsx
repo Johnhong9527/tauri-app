@@ -7,6 +7,7 @@ import {
   updateSelectedFileHistory,
   insertSearchFiles,
   searchDuplicateFile,
+  updateSelectedFileHistoryFiles,
 } from "@/services";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -88,12 +89,15 @@ export default function CalculateDuplicateFiles() {
   async function scanDirAll() {
     // const aabb = await get_progress_by_sourceId(`${fileId}`);
     // console.log(737373, aabb);
-
+    // const progressRes = await get_progress_by_sourceId(fileId || '')
+    // console.log(93, progressRes, fileInfo);
+    
     // return
 
     // navigate('/calculate-list/' + fileId)
     if (fileInfo.path) {
       // 扫描目录文件
+      console.log('扫描目录文件 开始');
       setStepsStatus({
         ...stepsStatus,
         scanDir: "process",
@@ -111,11 +115,17 @@ export default function CalculateDuplicateFiles() {
         types,
       });
       setPercent(100);
+      console.log('扫描目录文件 结束');
 
-      // console.log(636363, files);
+      
+
+      console.log(118, files);
 
       // 计算文件属性
+      console.log('计算文件属性 开始');
       if (files.length) {
+        // 更新当前查询目录的总文件数目
+        await updateSelectedFileHistoryFiles(fileInfo.path, files.length, )
         setStepsStatus({
           ...stepsStatus,
           scanDir: "finish",
@@ -152,6 +162,7 @@ export default function CalculateDuplicateFiles() {
           },
           Promise.resolve(0)
         );
+        console.log('计算文件属性 结束');
         setPercent(100);
         await waittime(1000);
         // 计算文件具体内容

@@ -52,10 +52,16 @@ export function CopyText({
     </div>
   );
 
-  return isTruncated ? <Tooltip placement="top" title={(
+  /* return isTruncated ? <Tooltip placement="top" title={(
     <div>
         <div>点记复制全文:</div>
         {name}
     </div>
-  )}>{content}</Tooltip> : content;
+  )}>{content}</Tooltip> : content; */
+  return <Tooltip placement="top" title={(
+    <div>
+        <div>点记复制全文:</div>
+        {name}
+    </div>
+  )}>{content}</Tooltip>;
 }

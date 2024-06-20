@@ -1606,9 +1606,9 @@ supports-color@^5.3.0:
   dependencies:
     has-flag "^3.0.0"
 
-"tauri-plugin-sql-api@https://github.com/tauri-apps/tauri-plugin-sql#v1":
+"tauri-plugin-sql-api@https://github.com/Johnhong9527/tauri-plugin-sql.git#v1":
   version "0.0.0"
-  resolved "https://github.com/tauri-apps/tauri-plugin-sql#6a4a14c36b1ad49c9f468351706d104a54e0540c"
+  resolved "https://github.com/Johnhong9527/tauri-plugin-sql.git#6a4a14c36b1ad49c9f468351706d104a54e0540c"
   dependencies:
     "@tauri-apps/api" "1.5.6"
 

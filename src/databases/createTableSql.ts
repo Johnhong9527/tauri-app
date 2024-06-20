@@ -10,6 +10,7 @@ export const createSql = {
         checkedSizeValues TEXT,
         checkboxSizeAll INTEGER NOT NULL CHECK (checkboxSizeAll IN (0, 1)),
         checkedTypeValues TEXT,
+        files INTEGER,
         UNIQUE (path)
     );`,
     search_files: `CREATE TABLE IF NOT EXISTS search_files (

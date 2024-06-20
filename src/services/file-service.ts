@@ -90,6 +90,33 @@ export async function updateSelectedFileHistory(
   }
 }
 
+export async function updateSelectedFileHistoryFiles(
+  path: string,
+  filesNum: number
+) {
+  try {
+    const DB = await Database.load("sqlite:files.db");
+    // 创建表
+    await DB.execute(createSql.select_history);
+    const result = await DB.execute(
+      `UPDATE select_history 
+             SET files = $1
+             WHERE path = $2;`,
+      [
+        filesNum,
+        path, // 假设 path 变量是预定义的
+      ]
+    );
+    return false;
+  } catch (error) {
+    console.log(595959, error);
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return error;
+  }
+}
+
 /**
  *
  * @param path 文件的路径

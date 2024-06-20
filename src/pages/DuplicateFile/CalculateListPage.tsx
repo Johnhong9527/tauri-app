@@ -12,6 +12,7 @@ import { useParams } from "react-router";
 import { insertSearchFilesPasamsType } from "@/types/files";
 import type { GetProp } from "antd";
 import File from "@/plugins/tauri-plugin-file/file";
+import { CopyText } from "@/components/Table/CopyText";
 
 export default function CalculateListPage() {
   let { fileId } = useParams();
@@ -63,6 +64,7 @@ export default function CalculateListPage() {
             otherItems: otherItems
               .map((elm) => {
                 if (elm.status === "fulfilled" && !elm.value[1]) {
+                  setRemoveList()
                   return elm.value[0];
                 }
                 return false;
@@ -81,35 +83,72 @@ export default function CalculateListPage() {
     appendData();
   }, []);
 
-  const onChange: GetProp<typeof Checkbox.Group, "onChange"> = (
-    checkedValues
+  const onChange = (
+    checkedValues: string[]
   ) => {
     console.log("checked = ", checkedValues);
     if (Array.isArray(checkedValues)) {
       // setRemoveList(checkedValues.filter(elm => typeof elm === 'string'));
-      // setRemoveList(checkedValues)
+      setRemoveList(checkedValues)
     }
     // value={removeList}
   };
 
   const CheckboxContent = (item: insertSearchFilesPasamsType) => (
-    <div>{item.path}</div>
+    <div className={styles.CheckboxContent}>
+      <div className={styles.path}>
+        <CopyText width="300px" color="#333" ellipsisLine={1} name={item.path || ''}></CopyText>
+      </div>
+      <div className={styles.modified_time}>
+        <CopyText width="100px" color="#333" name={item.modified_time || ''}></CopyText>
+      </div>
+      <div className={styles.modified_time}>
+        <CopyText width="100px" color="#333" name={item.file_size || ''}></CopyText>
+      </div>
+      <div className={styles.modified_time}>
+        <CopyText width="100px" color="#333" ellipsisLine={1} name={item.name || ''}></CopyText>
+      </div>
+    </div>
   );
 
   async function removeFilesByDB() {
-    const filesRes = await File.rmFile(
-      "/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg"
-    );
-    console.log(9797, filesRes);
-    if (filesRes.code === 200) {
-      await del_file_by_id(
-        "/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg",
-        "24"
-      );
-      message.success('删除成功!')
+    const filesRes = await Promise.allSettled(removeList.map(path => File.rmFile(path)))
+    if(removeList.length === 1) {
+      console.log(106, filesRes);
+      if(filesRes[0].status === "fulfilled" && filesRes[0].value.code === 200) {
+        setRemoveList([])
+        del_file_by_id(
+          removeList[0],
+          `${fileId}`
+        );
+        message.success(`${removeList[0]} 删除成功!`)
+        appendData();
+        return
+      } 
+      await tauriMessage(removeList[0], {
+        title: "删除失败",
+        type: "error",
+      });
+    }
+    const rmSuccess = filesRes.filter(res => {
+      console.log(116, res);
+      return res.status === 'fulfilled' && res.value.code === 200
+    })
+    if (rmSuccess.length) {
+      await rmSuccess.reduce(async(prev: any, item: any)=> {
+        await prev();
+        console.log(119, item.value.data);
+        
+        return del_file_by_id(
+          item.value.data,
+          `${fileId}`
+        );
+      }, Promise.resolve(0));
+      message.success( `${rmSuccess.length}个文件删除成功! ${filesRes.length - rmSuccess.length}个文件删除失败!`)
+      appendData();
       return;
     }
-    await tauriMessage(filesRes.msg, {
+    await tauriMessage('当前操作异常，请重新尝试！', {
       title: "删除失败",
       type: "error",
     });
@@ -130,25 +169,27 @@ export default function CalculateListPage() {
           <Button type="primary">导出</Button>
         </Space>
         <div style={{ marginBottom: "12px" }}></div>
-        <Checkbox.Group onChange={onChange} style={{ width: "100%" }}>
+        <Checkbox.Group onChange={onChange} style={{ width: "100%" }} value={removeList}>
           <div style={{ width: "100%" }}>
             {data.map((item: FileItem) => (
               <div
                 key={item.hash}
                 style={{
-                  marginBottom: "12px",
+                  backgroundColor: 'var(--color-2)',
+                  marginBottom: '24px'
                 }}
               >
-                <div>
+                <div className={styles.CheckboxGroup}>
                   <Checkbox value={item.firstItem.path}>
                     {CheckboxContent(item.firstItem)}
                   </Checkbox>
                 </div>
                 <div
                   style={{
-                    backgroundColor: "var(--color-1)",
+                    border: '1px solid var(--color-1)',
                     padding: "12px 3px",
                   }}
+                  className={styles.CheckboxGroup}
                 >
                   {item.otherItems.map((otherItem) => (
                     <div key={otherItem.path}>

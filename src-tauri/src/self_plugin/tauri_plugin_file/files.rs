@@ -279,20 +279,24 @@ pub fn get_file_info(file_path: String) -> Result<FileInfos> {
 pub struct RequestMvFile {
     code: Option<u64>,
     msg: Option<String>,
+    data: Option<String>,
 }
 
 #[command]
 pub fn mv_file_to_trash(file_path: String) -> RequestMvFile {
+    let data = file_path.clone();
     if let Err(e) = trash::delete(file_path) {
         RequestMvFile {
             code: Some(500),
             msg: Some(format!("Error moving file to trash: {}", e)),
+            data: Some(format!("{}", data)),
         }
     } else {
         println!("File successfully moved to trash.");
         RequestMvFile {
             code: Some(200),
             msg: Some("File successfully moved to trash.".to_string()),
+            data: Some(format!("{}", data)),
         }
     }
 }
