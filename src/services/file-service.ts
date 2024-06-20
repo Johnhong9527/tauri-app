@@ -328,8 +328,6 @@ export async function searchDuplicateFile({
       `SELECT hash,
        sourceId,
        GROUP_CONCAT(id)    AS ids,
-       GROUP_CONCAT(path)  AS paths,
-       GROUP_CONCAT(creation_time)  AS creation_tims,
        COUNT(*)           AS count
 FROM search_files
 WHERE sourceId = $1
@@ -338,12 +336,11 @@ WHERE sourceId = $1
   AND hash != ""
 GROUP BY hash, sourceId
 HAVING COUNT(*) > 1
-ORDER BY [creation_time] ASC
-LIMIT $3 OFFSET ($2 - 1) * $3;
 `,
+/* ORDER BY [creation_time] ASC
+LIMIT $3 OFFSET ($2 - 1) * $3; */
       [sourceId, page, pageSize]
     );
-    console.log(285, res);
     return Promise.resolve([true, res]);
   } catch (err) {
     // console.log(145, err);
@@ -392,6 +389,50 @@ export async function updateFileHsah(
         sourceId,
       ]
     );
+    return false;
+  } catch (error) {
+    console.log(595959, error);
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return error;
+  }
+}
+
+
+export async function get_fileInfo_by_id(id: string, sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    const res = await DB.select("SELECT * FROM search_files WHERE id = $1 and sourceId = $2", [
+      id, sourceId
+    ]);
+    if (Array.isArray(res)) {
+      return [res[0], ""];
+    }
+    return [false, "暂无数据"];
+  } catch (err) {
+    if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
+      return [false, "当前路径重复"];
+    }
+    return [false, `${err}`];
+  }
+}
+
+export async function del_file_by_id(path: string, sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    const result = await DB.execute(
+      `DELETE FROM search_files WHERE path = $1 and sourceId = $2`,
+      [
+        path, // 假设 path 变量是预定义的
+        sourceId,
+      ]
+    );
+    console.log(206, result);
     return false;
   } catch (error) {
     console.log(595959, error);

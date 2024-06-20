@@ -223,9 +223,9 @@ export default function CalculateDuplicateFiles() {
         });
         setPercent(0);
         // 分析重复文件
-        const searchDuplicateFileRes = await searchDuplicateFile({
+        /* const searchDuplicateFileRes = await searchDuplicateFile({
           sourceId: fileId || "",
-        });
+        }); */
         /* 
             [
                 {count: 6, hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", ids: "17,21,22,26,27,31", },
@@ -260,9 +260,9 @@ export default function CalculateDuplicateFiles() {
             ] 
     
         */
-        console.log(747474, searchDuplicateFileRes);
+        /* console.log(747474, searchDuplicateFileRes);
         if (searchDuplicateFileRes[0]) {
-        }
+        } */
 
         setStepsStatus({
           scanDir: "finish",
@@ -271,6 +271,8 @@ export default function CalculateDuplicateFiles() {
           done: "finish",
         });
         setPercent(100);
+        await waittime(1000);
+        navigate('/calculate-list/' + fileId)
       }
     }
   }

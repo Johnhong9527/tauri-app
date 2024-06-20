@@ -14,7 +14,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             get_all_directory,
             get_file_type_by_path,
             calculate_file_hash,
-            get_file_info
+            get_file_info,
+            mv_file_to_trash
             // get_file_info_by_path,
         ])
         .setup(|_app| {

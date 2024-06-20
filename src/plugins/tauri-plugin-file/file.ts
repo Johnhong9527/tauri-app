@@ -33,6 +33,12 @@ export class File {
       filePath: path,
     });
   }
+  
+  static async rmFile(path: string): Promise<any> {
+    return await invoke<string>("plugin:st-files|mv_file_to_trash", {
+      filePath: path,
+    });
+  }
 
   // async close(): Promise<boolean> {
   //     return await invoke('plugin:st-sqlite|close', { path: this.path })

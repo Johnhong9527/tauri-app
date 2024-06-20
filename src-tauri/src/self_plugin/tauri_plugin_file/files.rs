@@ -1,10 +1,11 @@
 use hex;
 use serde::{Deserialize, Serialize, Serializer};
 use sha2::{Digest as OtherDigest, Sha256}; // 确保导入 `Digest`
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
-use std::fs;
 use tauri::command;
+extern crate trash;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -272,4 +273,26 @@ pub fn get_file_info(file_path: String) -> Result<FileInfos> {
     };
 
     Ok(file_info)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RequestMvFile {
+    code: Option<u64>,
+    msg: Option<String>,
+}
+
+#[command]
+pub fn mv_file_to_trash(file_path: String) -> RequestMvFile {
+    if let Err(e) = trash::delete(file_path) {
+        RequestMvFile {
+            code: Some(500),
+            msg: Some(format!("Error moving file to trash: {}", e)),
+        }
+    } else {
+        println!("File successfully moved to trash.");
+        RequestMvFile {
+            code: Some(200),
+            msg: Some("File successfully moved to trash.".to_string()),
+        }
+    }
 }
