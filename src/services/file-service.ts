@@ -158,18 +158,37 @@ export async function insertSearchFiles({
   type,
   name,
   hash,
+  creation_time,
+  modified_time,
+  file_size,
 }: insertSearchFilesPasamsType) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
     await DB.execute(
-      "INSERT into search_files (time, sourceId, name,type,path,hash, db_version) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-      [new Date().getTime(), sourceId, path, type, name, hash, "1"]
+      `
+        INSERT into search_files 
+          (create_time, sourceId, name, type, path, hash, creation_time, modified_time, file_size, db_version) 
+        VALUES 
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `,
+      [
+        new Date().getTime(),
+        sourceId,
+        name,
+        type,
+        path,
+        hash,
+        creation_time,
+        modified_time,
+        file_size,
+        "1",
+      ]
     );
     return Promise.resolve([true, ""]);
   } catch (err) {
-    console.log(145, err);
+    // console.log(145, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return Promise.resolve([false, "当前路径重复"]);
     }
@@ -228,7 +247,7 @@ export async function get_list_by_sourceid(
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    const res = await DB.execute(
+    const res = await DB.select(
       "SELECT * FROM search_files WHERE sourceId = $1",
       [sourceId]
     );
@@ -290,8 +309,12 @@ type SearchResult = [boolean, DuplicateFileInfo[] | string | unknown];
 
 export async function searchDuplicateFile({
   sourceId,
+  page = 1,
+  pageSize = 1000,
 }: {
   sourceId: string;
+  page?: number;
+  pageSize?: number;
 }): Promise<SearchResult> {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
@@ -306,7 +329,7 @@ export async function searchDuplicateFile({
        sourceId,
        GROUP_CONCAT(id)    AS ids,
        GROUP_CONCAT(path)  AS paths,
-       GROUP_CONCAT(time)  AS times,
+       GROUP_CONCAT(creation_time)  AS creation_tims,
        COUNT(*)           AS count
 FROM search_files
 WHERE sourceId = $1
@@ -314,14 +337,16 @@ WHERE sourceId = $1
   AND hash != "''"
   AND hash != ""
 GROUP BY hash, sourceId
-HAVING COUNT(*) > 1;
+HAVING COUNT(*) > 1
+ORDER BY [creation_time] ASC
+LIMIT $3 OFFSET ($2 - 1) * $3;
 `,
-      [sourceId]
+      [sourceId, page, pageSize]
     );
     console.log(285, res);
     return Promise.resolve([true, res]);
   } catch (err) {
-    console.log(145, err);
+    // console.log(145, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return Promise.resolve([false, "当前路径重复"]);
     }
@@ -346,4 +371,33 @@ FROM search_files;`,
   );
 
   return res;
+}
+
+export async function updateFileHsah(
+  path?: string,
+  hash?: string,
+  sourceId?: string
+) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    const result = await DB.execute(
+      `UPDATE search_files 
+             SET hash = $1
+             WHERE path = $2 and sourceId = $3;`,
+      [
+        hash,
+        path, // 假设 path 变量是预定义的
+        sourceId,
+      ]
+    );
+    return false;
+  } catch (error) {
+    console.log(595959, error);
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return error;
+  }
 }

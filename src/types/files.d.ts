@@ -29,7 +29,10 @@ export type insertSearchFilesPasamsType = {
   // progress: number;
   type: string,
   name: string,
-  hash: string
+  hash: string,
+  file_size: string,
+  creation_time?: string,
+  modified_time?: string,
 };
 
 export type historyListType = {

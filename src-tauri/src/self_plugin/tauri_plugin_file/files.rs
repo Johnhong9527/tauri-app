@@ -1,15 +1,10 @@
 use hex;
-use ring::digest::{Context, Digest, SHA256};
 use serde::{Deserialize, Serialize, Serializer};
 use sha2::{Digest as OtherDigest, Sha256}; // 确保导入 `Digest`
-use std::io::{self, Read};
 use std::path::{Path, PathBuf};
-use std::result::Result as new_Result;
-use std::{fs, option};
+use std::time::UNIX_EPOCH;
+use std::fs;
 use tauri::command;
-use std::time::{SystemTime, UNIX_EPOCH};
-// use std::result::Result;
-// use tauri::api::file::IntoInvokeHandler;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -29,17 +24,17 @@ impl Serialize for Error {
 type Result<T> = std::result::Result<T, Error>;
 
 // 提取 /Users/sysadmin/code/rust_project/tauri-app/diff_source/node_modules 中，最后面的数据
-fn extract_last_value<'a>(path: &'a str, value: &'a str) -> &'a str {
+/* fn extract_last_value<'a>(path: &'a str, value: &'a str) -> &'a str {
     if let Some(index) = path.rfind(value) {
         let (content, _) = path.split_at(index);
         content.trim_end_matches('/')
     } else {
         path
     }
-}
+} */
 
 // 过滤
-fn filter_other_directory(path: &str, directories: &[&str]) -> bool {
+/* fn filter_other_directory(path: &str, directories: &[&str]) -> bool {
     // let directories = ["node_modules", ".git", ".obsidian", ".DS_Store"];
     for directory in directories.iter() {
         if extract_last_value(path, directory) != path {
@@ -47,7 +42,7 @@ fn filter_other_directory(path: &str, directories: &[&str]) -> bool {
         }
     }
     true
-}
+} */
 
 // fn read_files_in_directory(directory: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
 //     if let Ok(entries) = fs::read_dir(directory) {
@@ -232,7 +227,6 @@ pub fn calculate_file_hash(file_path: String) -> Result<String> {
     Ok(hash)
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileInfos {
     file_path: PathBuf,
@@ -240,6 +234,7 @@ pub struct FileInfos {
     file_type: Option<String>,
     file_size: u64,
     modified_time: Option<u64>, // 时间戳形式
+    creation_time: Option<u64>,
 }
 
 #[command]
@@ -250,17 +245,30 @@ pub fn get_file_info(file_path: String) -> Result<FileInfos> {
     let metadata = fs::metadata(&path)?;
 
     // 获取文件修改时间
-    let modified_time = metadata.modified().ok()
+    let modified_time = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+
+    // 获取文件创建时间
+    let accessed_time = metadata
+        .accessed()
+        .ok()
         .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
         .map(|d| d.as_secs());
 
     // 构造FileInfo结构
     let file_info = FileInfos {
         file_path: path.to_path_buf(),
-        file_name: path.file_name().and_then(|name| name.to_str()).map(|name| name.to_string()),
+        file_name: path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .map(|name| name.to_string()),
         file_type: get_file_type(&file_path).map(|t| t.to_string()),
         file_size: metadata.len(),
         modified_time,
+        creation_time: accessed_time,
     };
 
     Ok(file_info)

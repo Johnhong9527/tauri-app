@@ -10,7 +10,11 @@ import {
 } from "@/services";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FileInfoType, stepsStatusType } from "@/types/files";
+import {
+  FileInfoType,
+  insertSearchFilesPasamsType,
+  stepsStatusType,
+} from "@/types/files";
 import { message } from "@tauri-apps/api/dialog";
 import styles from "./CalculateDuplicateFiles.module.less";
 import File from "@/plugins/tauri-plugin-file/file";
@@ -22,7 +26,11 @@ import {
 } from "@ant-design/icons";
 import { readDir, BaseDirectory } from "@tauri-apps/api/fs";
 import { fileTypeList } from "./config";
-import get_progress_by_sourceId, { get_list_by_sourceid } from "@/services/file-service";
+import get_progress_by_sourceId, {
+  get_list_by_sourceid,
+  updateFileHsah,
+} from "@/services/file-service";
+import { resolve } from "path";
 
 export default function CalculateDuplicateFiles() {
   let { fileId } = useParams();
@@ -31,14 +39,23 @@ export default function CalculateDuplicateFiles() {
   const [current, setCurrent] = useState(1);
   const [percent, setPercent] = useState(85);
   const [stepsStatus, setStepsStatus] = useState<stepsStatusType>({
-    scanDir: "finish",
-    fileOptions: "process",
+    // 'wait' | 'process' | 'finish' | 'error';
+    scanDir: "wait",
+    fileOptions: "wait",
     duplicateFiles: "wait",
     done: "wait",
   });
   useEffect(() => {
     pageInit();
   }, []);
+
+  const waittime = (time = 100) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(0);
+      }, time);
+    });
+  };
 
   async function pageInit() {
     if (fileId) {
@@ -69,16 +86,20 @@ export default function CalculateDuplicateFiles() {
     }
   }
   async function scanDirAll() {
- 
     // const aabb = await get_progress_by_sourceId(`${fileId}`);
     // console.log(737373, aabb);
-    
+
     // return
-    
+
     // navigate('/calculate-list/' + fileId)
     if (fileInfo.path) {
       // 扫描目录文件
-
+      setStepsStatus({
+        ...stepsStatus,
+        scanDir: "process",
+      });
+      setCurrent(1);
+      setPercent(0);
       // 排除指定的文件大小、或者筛选所有体量的文件
       const size = []; // 全部为空
 
@@ -89,58 +110,122 @@ export default function CalculateDuplicateFiles() {
         path: fileInfo.path,
         types,
       });
+      setPercent(100);
 
-      console.log(636363, files);
+      // console.log(636363, files);
 
       // 计算文件属性
       if (files.length) {
+        setStepsStatus({
+          ...stepsStatus,
+          scanDir: "finish",
+          fileOptions: "process",
+        });
+        // setCurrent(1)
+        setPercent(0);
         // await files.reduce(async ())
-
+        let fileIndex = -1;
+        let allFilesLength = files.length;
         const result = await files.reduce(
           async (prevPromise: any, currentFile: any) => {
             // 等待上一个 Promise 完成
             await prevPromise;
-            console.log(95, currentFile);
             // 获取文件类型和哈希
-            const type = await File.getType(currentFile);
+            const fileInfo = await File.getInfo(currentFile);
             // const hash = await File.getHash(currentFile);
-            const hash = '';
-            /* 
-              const resInfo = await File.getInfo("/Users/sysadmin/Downloads/google-cloud-cli-455.0.0-darwin-arm.tar.gz")
-              console.log(7373, resInfo);
-              return
-                    Object: {
-                      file_name: "google-cloud-cli-455.0.0-darwin-arm.tar.gz",
-                      file_path: "/Users/sysadmin/Downloads/google-cloud-cli-455.0.0-darwin-arm.tar.gz",
-                      file_size: 119890163,
-                      file_type: "gz",
-                      modified_time: 1701394601,
-                      Object Prototype,
-                    }
-            */
+            const hash = "";
+            fileIndex++;
+            setPercent(Math.floor((fileIndex / allFilesLength) * 100));
+            // await waittime(300);
             return insertSearchFiles({
               // 组装数据
               sourceId: `${fileId}`,
               path: currentFile,
               // type: await File.getType(elm),
-              name: currentFile,
+              name: fileInfo.file_name,
+              creation_time: fileInfo.creation_time,
+              modified_time: fileInfo.modified_time,
+              file_size: fileInfo.file_size,
+              type: fileInfo.file_type,
               hash,
-              type,
             });
           },
           Promise.resolve(0)
         );
-
-        console.log(result); // 顺序处理每个项，然后输出最终结果
+        setPercent(100);
+        await waittime(1000);
         // 计算文件具体内容
-        const allList = await get_list_by_sourceid(`${fileId}`)
-        console.log(137, allList);
-        
+        const [allList, allListMsg] = await get_list_by_sourceid(`${fileId}`);
+        console.log({
+          allList,
+          allListMsg,
+        });
 
+        if (allList) {
+          let fileIndex = -1;
+          let allFilesLength = allList.length;
+          setStepsStatus({
+            ...stepsStatus,
+            scanDir: "finish",
+            fileOptions: "finish",
+            duplicateFiles: "process",
+          });
+          setPercent(0);
+          console.log(173, allFilesLength);
+
+          const allListresult = await allList
+            .filter(
+              (currentFile: insertSearchFilesPasamsType) => !currentFile.hash
+            )
+            .reduce(
+              async (
+                prevPromise: any,
+                currentFile: insertSearchFilesPasamsType
+              ) => {
+                // 等待上一个 Promise 完成
+                await prevPromise;
+                // 获取文件类型和哈希
+                // const type = await File.getType(currentFile);
+                const hash = await File.getHash(currentFile.path);
+                fileIndex++;
+                await waittime();
+                setPercent(Math.floor((fileIndex / allFilesLength) * 100));
+                return updateFileHsah(currentFile.path, hash, `${fileId}`);
+              },
+              Promise.resolve(0)
+            );
+
+          await waittime(1000);
+          setStepsStatus({
+            ...stepsStatus,
+            scanDir: "finish",
+            fileOptions: "finish",
+            duplicateFiles: "finish",
+          });
+          setPercent(100);
+        } else {
+          setStepsStatus({
+            ...stepsStatus,
+            scanDir: "finish",
+            fileOptions: "finish",
+            duplicateFiles: "finish",
+          });
+          setPercent(100);
+          await waittime(2000);
+        }
+
+        setStepsStatus({
+          ...stepsStatus,
+          scanDir: "finish",
+          fileOptions: "finish",
+          duplicateFiles: "finish",
+          done: "process",
+        });
+        setPercent(0);
         // 分析重复文件
-        const searchDuplicateFileRes =  await searchDuplicateFile({
-            sourceId: fileId || ''
-        })
+        const searchDuplicateFileRes = await searchDuplicateFile({
+          sourceId: fileId || "",
+        });
         /* 
             [
                 {count: 6, hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", ids: "17,21,22,26,27,31", },
@@ -176,7 +261,16 @@ export default function CalculateDuplicateFiles() {
     
         */
         console.log(747474, searchDuplicateFileRes);
-        if(searchDuplicateFileRes[0]) {}
+        if (searchDuplicateFileRes[0]) {
+        }
+
+        setStepsStatus({
+          scanDir: "finish",
+          fileOptions: "finish",
+          duplicateFiles: "finish",
+          done: "finish",
+        });
+        setPercent(100);
       }
     }
   }
@@ -186,7 +280,6 @@ export default function CalculateDuplicateFiles() {
     if (!fileInfo.checkedTypeValues?.length || !fileInfo.checkedTypeValues)
       return [];
     const checkedTypeValues = `${fileInfo.checkedTypeValues}`?.split(",");
-    console.log(84884, checkedTypeValues);
     fileTypeList.map((elm) => {
       if (checkedTypeValues.indexOf(elm.name) > -1) {
         types = types.concat(elm.valus);
