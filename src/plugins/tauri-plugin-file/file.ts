@@ -42,6 +42,11 @@ export class File {
   static async getAppDataDir(): Promise<string> {
     return await invoke<string>("plugin:st-files|get_app_data_dir");
   }
+  static async showFileInExplorer(filePath: string): Promise<string> {
+    return await invoke<string>("plugin:st-files|show_file_in_explorer", {
+      filePath
+    });
+  }
 
   // async close(): Promise<boolean> {
   //     return await invoke('plugin:st-sqlite|close', { path: this.path })

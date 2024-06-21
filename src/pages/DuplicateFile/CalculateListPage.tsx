@@ -16,14 +16,18 @@ import {
   get_fileInfo_by_id,
   searchDuplicateFile,
 } from "@/services";
-import { message as tauriMessage, save as dialogSave } from "@tauri-apps/api/dialog";
-import { appDataDir, join } from '@tauri-apps/api/path';
+import {
+  message as tauriMessage,
+  save as dialogSave,
+} from "@tauri-apps/api/dialog";
+import { appDataDir, join } from "@tauri-apps/api/path";
 import styles from "./CalculateListPage.module.less";
 import { useParams } from "react-router";
 import { insertSearchFilesPasamsType } from "@/types/files";
 import type { GetProp } from "antd";
 import File from "@/plugins/tauri-plugin-file/file";
 import { CopyText } from "@/components/Table/CopyText";
+import { FolderOpenOutlined } from "@ant-design/icons";
 
 export default function CalculateListPage() {
   let { fileId } = useParams();
@@ -99,38 +103,48 @@ export default function CalculateListPage() {
       setRemoveList(checkedValues);
     }
   };
+  const openFileShowInExplorer = async (path: string) => {
+    const res = await File.showFileInExplorer(path);
+  };
 
   const CheckboxContent = (item: insertSearchFilesPasamsType) => (
     <div className={styles.CheckboxContent}>
+      <div>
+        <FolderOpenOutlined onClick={() => openFileShowInExplorer(item.path)} />
+      </div>
       <div className={styles.path}>
-        <CopyText
+        {item.path}
+        {/* <CopyText
           width="300px"
           color="#333"
           ellipsisLine={1}
           name={item.path || ""}
-        ></CopyText>
+        ></CopyText> */}
       </div>
       <div className={styles.modified_time}>
-        <CopyText
+        {/* <CopyText
           width="100px"
           color="#333"
           name={item.modified_time || ""}
-        ></CopyText>
+        ></CopyText> */}
+        {item.modified_time}
       </div>
       <div className={styles.modified_time}>
-        <CopyText
+        {/* <CopyText
           width="100px"
           color="#333"
           name={item.file_size || ""}
-        ></CopyText>
+        ></CopyText> */}
+        {item.file_size}
       </div>
       <div className={styles.modified_time}>
-        <CopyText
+        {/* <CopyText
           width="100px"
           color="#333"
           ellipsisLine={1}
-          name={item.name || ""}
-        ></CopyText>
+          name={ || ""}
+        ></CopyText> */}
+        {item.name}
       </div>
     </div>
   );
@@ -187,8 +201,12 @@ export default function CalculateListPage() {
   }
   async function openDialogSave() {
     // const appDataDir = await File.getAppDataDir();
-    const appDataDirPath = await appDataDir();
-    console.log(190, appDataDirPath);
+    // const appDataDirPath = await appDataDir();
+    // console.log(190, appDataDirPath);
+    const res = await File.showFileInExplorer(
+      "/Users/sysadmin/Downloads/hhyy/src/pages/activity/static/noData.png"
+    );
+    console.log(193, res);
 
     return;
     // dialogSave

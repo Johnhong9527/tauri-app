@@ -223,23 +223,79 @@ pub fn mv_file_to_trash(file_path: String) -> RequestMvFile {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-enum AppError {
-    DataDirNotFound,
-    Other(String),
-}
-
-impl std::fmt::Display for AppError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            AppError::DataDirNotFound => write!(f, "Application data directory not found"),
-            AppError::Other(ref err) => write!(f, "Error: {}", err),
-        }
-    }
-}
-
 #[command]
 pub fn get_app_data_dir() -> String {
     std::env::var("MY_APP_DATA_DIR")
     .unwrap_or_else(|_| "Environment variable for app data directory not set".to_string())
+}
+
+/* #[command]
+fn open_finder(path: String) -> RequestMvFile {
+    let open_result = std::process::Command::new("open")
+        .arg("-R")
+        // .arg("Finder")
+        .arg(path)
+        .spawn();
+
+    match open_result {
+        Ok(_) => RequestMvFile {
+            code: Some(200),
+            msg: Some("success".to_string()),
+            data: Some("success".to_string()),
+        },
+        Err(e) => RequestMvFile {
+            code: Some(500),
+            msg: Some("error".to_string()),
+            data: Some(e.to_string()),
+        },
+    }
+} */
+
+#[command]
+pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
+    println!("256 {}",file_path);
+    // 获取文件所在的目录
+    #[cfg(target_os = "linux")]
+    let path = std::path::Path::new(&file_path);
+    #[cfg(target_os = "linux")]
+    let parent_dir = match path.parent() {
+        Some(dir) => dir.to_str().unwrap_or(""),
+        None => return RequestMvFile {
+            code: Some(500),
+            msg: Some("No parent directory found.".to_string()),
+            data: Some("No parent directory found.".to_string()),
+        }
+    };
+
+    #[cfg(target_os = "windows")]
+    let command = std::process::Command::new("explorer")
+        .args(&["/select,", &file_path])
+        .spawn();
+
+    #[cfg(target_os = "macos")]
+    let command = std::process::Command::new("open")
+        .args(&["-R", &file_path])
+        .spawn();
+
+    #[cfg(target_os = "linux")]
+    let command = std::process::Command::new("nautilus")
+        .args(&["--browser", "--select", &file_path])
+        .or_else(|_| {
+            std::process::Command::new("xdg-open")
+                .arg(parent_dir)
+                .spawn()
+        });
+
+    match command {
+        Ok(_) => RequestMvFile {
+            code: Some(200),
+            msg: Some("success".to_string()),
+            data: Some("success".to_string()),
+        },
+        Err(e) => RequestMvFile {
+            code: Some(500),
+            msg: Some("error".to_string()),
+            data: Some(e.to_string()),
+        },
+    }
 }
