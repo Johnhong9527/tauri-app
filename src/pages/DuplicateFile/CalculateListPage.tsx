@@ -37,7 +37,6 @@ export default function CalculateListPage() {
           title: "查询失败",
           type: "error",
         }));
-      console.log(searchDuplicateFileRes);
     }
 
     if (Array.isArray(searchDuplicateFileRes)) {
@@ -85,12 +84,9 @@ export default function CalculateListPage() {
   }, []);
 
   const onChange = (checkedValues: string[]) => {
-    console.log("checked = ", checkedValues);
     if (Array.isArray(checkedValues)) {
-      // setRemoveList(checkedValues.filter(elm => typeof elm === 'string'));
       setRemoveList(checkedValues);
     }
-    // value={removeList}
   };
 
   const CheckboxContent = (item: insertSearchFilesPasamsType) => (
@@ -140,7 +136,6 @@ export default function CalculateListPage() {
       removeList.map((path) => File.rmFile(path))
     );
     if (removeList.length === 1) {
-      console.log(106, filesRes);
       if (
         filesRes[0].status === "fulfilled" &&
         filesRes[0].value.code === 200
@@ -157,7 +152,6 @@ export default function CalculateListPage() {
       });
     }
     const rmSuccess = filesRes.filter((res) => {
-      console.log(116, res);
       return res.status === "fulfilled" && res.value.code === 200;
     });
     if (rmSuccess.length) {
