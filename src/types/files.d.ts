@@ -8,6 +8,7 @@ export interface FileInfoType {
   checkedSizeValues?: unknown[];
   checkboxSizeAll?: boolean;
   checkedTypeValues?: unknown[];
+  files?: unknown[];
   time?: string;
   id?: number;
   progress?: number;

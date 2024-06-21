@@ -388,7 +388,7 @@ export default async function get_progress_by_sourceId(
   const res: DuplicateFileInfo[] = await DB.select(
     `SELECT 
     COUNT(*) AS total_entries,
-    COUNT(CASE WHEN sourceId = $1 THEN 1 ELSE NULL END) AS sourceId_1_count,
+    COUNT(CASE WHEN sourceId = $1 THEN 1 ELSE NULL END) AS sourceId_count,
     COUNT(CASE WHEN hash IS NULL OR hash = '' THEN 1 ELSE NULL END) AS hash_null_count
 FROM search_files;`,
     [sourceId]
@@ -473,20 +473,19 @@ export async function del_file_by_id(path: string, sourceId: string) {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    const result = await DB.execute(
+    await DB.execute(
       `DELETE FROM search_files WHERE path = $1 and sourceId = $2`,
       [
         path, // 假设 path 变量是预定义的
         sourceId,
       ]
     );
-    console.log(206, result);
-    return false;
+    return Promise.resolve(false);
   } catch (error) {
     console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
-    return error;
+    return Promise.resolve(error);
   }
 }

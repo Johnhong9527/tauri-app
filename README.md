@@ -45,3 +45,12 @@ https://blog.csdn.net/cdc8596/article/details/94732238
 https://crates.io/search?q=sqlite
 
 https://github.com/launchbadge/sqlx
+
+由于国内开发环境的问题
+以下仓库是从 https://github.com/tauri-apps/plugins-workspace 拉取的
+- https://github.com/Johnhong9527/tauri-plugin-sql
+- https://gitee.com/seamong/tauri-plugin-sql
+
+
+- https://github.com/Johnhong9527/tauri-plugin-sql
+- https://gitee.com/seamong/tauri-plugin-sql

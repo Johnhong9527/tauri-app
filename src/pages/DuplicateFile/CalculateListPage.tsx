@@ -1,4 +1,4 @@
-import { Avatar, List, message, Checkbox, Row, Col, Space, Button } from "antd";
+import { Avatar, List, message, Checkbox, Row, Col, Space, Button, Spin } from "antd";
 import type { CheckboxProps } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -17,6 +17,7 @@ import { CopyText } from "@/components/Table/CopyText";
 export default function CalculateListPage() {
   let { fileId } = useParams();
   const [data, setData] = useState<FileItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [removeList, setRemoveList] = useState<string[]>([]);
   interface FileItem {
     sourceId: number;
@@ -64,7 +65,7 @@ export default function CalculateListPage() {
             otherItems: otherItems
               .map((elm) => {
                 if (elm.status === "fulfilled" && !elm.value[1]) {
-                  setRemoveList()
+                  setRemoveList([]);
                   return elm.value[0];
                 }
                 return false;
@@ -83,13 +84,11 @@ export default function CalculateListPage() {
     appendData();
   }, []);
 
-  const onChange = (
-    checkedValues: string[]
-  ) => {
+  const onChange = (checkedValues: string[]) => {
     console.log("checked = ", checkedValues);
     if (Array.isArray(checkedValues)) {
       // setRemoveList(checkedValues.filter(elm => typeof elm === 'string'));
-      setRemoveList(checkedValues)
+      setRemoveList(checkedValues);
     }
     // value={removeList}
   };
@@ -97,58 +96,86 @@ export default function CalculateListPage() {
   const CheckboxContent = (item: insertSearchFilesPasamsType) => (
     <div className={styles.CheckboxContent}>
       <div className={styles.path}>
-        <CopyText width="300px" color="#333" ellipsisLine={1} name={item.path || ''}></CopyText>
+        <CopyText
+          width="300px"
+          color="#333"
+          ellipsisLine={1}
+          name={item.path || ""}
+        ></CopyText>
       </div>
       <div className={styles.modified_time}>
-        <CopyText width="100px" color="#333" name={item.modified_time || ''}></CopyText>
+        <CopyText
+          width="100px"
+          color="#333"
+          name={item.modified_time || ""}
+        ></CopyText>
       </div>
       <div className={styles.modified_time}>
-        <CopyText width="100px" color="#333" name={item.file_size || ''}></CopyText>
+        <CopyText
+          width="100px"
+          color="#333"
+          name={item.file_size || ""}
+        ></CopyText>
       </div>
       <div className={styles.modified_time}>
-        <CopyText width="100px" color="#333" ellipsisLine={1} name={item.name || ''}></CopyText>
+        <CopyText
+          width="100px"
+          color="#333"
+          ellipsisLine={1}
+          name={item.name || ""}
+        ></CopyText>
       </div>
     </div>
   );
-
+  const waittime = (time = 100) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(0);
+      }, time);
+    });
+  };
   async function removeFilesByDB() {
-    const filesRes = await Promise.allSettled(removeList.map(path => File.rmFile(path)))
-    if(removeList.length === 1) {
+    setLoading(true)
+    const filesRes = await Promise.allSettled(
+      removeList.map((path) => File.rmFile(path))
+    );
+    if (removeList.length === 1) {
       console.log(106, filesRes);
-      if(filesRes[0].status === "fulfilled" && filesRes[0].value.code === 200) {
-        setRemoveList([])
-        del_file_by_id(
-          removeList[0],
-          `${fileId}`
-        );
-        message.success(`${removeList[0]} 删除成功!`)
+      if (
+        filesRes[0].status === "fulfilled" &&
+        filesRes[0].value.code === 200
+      ) {
+        setRemoveList([]);
+        del_file_by_id(removeList[0], `${fileId}`);
+        message.success(`${removeList[0]} 删除成功!`);
         appendData();
-        return
-      } 
+        return;
+      }
       await tauriMessage(removeList[0], {
         title: "删除失败",
         type: "error",
       });
     }
-    const rmSuccess = filesRes.filter(res => {
+    const rmSuccess = filesRes.filter((res) => {
       console.log(116, res);
-      return res.status === 'fulfilled' && res.value.code === 200
-    })
+      return res.status === "fulfilled" && res.value.code === 200;
+    });
     if (rmSuccess.length) {
-      await rmSuccess.reduce(async(prev: any, item: any)=> {
-        await prev();
-        console.log(119, item.value.data);
-        
-        return del_file_by_id(
-          item.value.data,
-          `${fileId}`
-        );
-      }, Promise.resolve(0));
-      message.success( `${rmSuccess.length}个文件删除成功! ${filesRes.length - rmSuccess.length}个文件删除失败!`)
+      await rmSuccess.reduce(async (prevPromise: any, item: any) => {
+        await prevPromise;
+        return del_file_by_id(item.value.data, `${fileId}`);
+      }, Promise.resolve());
+      message.success(
+        `${rmSuccess.length}个文件删除成功! ${filesRes.length - rmSuccess.length}个文件删除失败!`
+      );
       appendData();
+      await waittime(1500)
+      setLoading(false)
       return;
     }
-    await tauriMessage('当前操作异常，请重新尝试！', {
+    await waittime(1500)
+    setLoading(false)
+    await tauriMessage("当前操作异常，请重新尝试！", {
       title: "删除失败",
       type: "error",
     });
@@ -156,6 +183,7 @@ export default function CalculateListPage() {
 
   return (
     <div className={styles.CalculateListPage}>
+      <Spin spinning={loading}>
       <div
         style={{
           padding: "24px",
@@ -169,14 +197,18 @@ export default function CalculateListPage() {
           <Button type="primary">导出</Button>
         </Space>
         <div style={{ marginBottom: "12px" }}></div>
-        <Checkbox.Group onChange={onChange} style={{ width: "100%" }} value={removeList}>
+        <Checkbox.Group
+          onChange={onChange}
+          style={{ width: "100%" }}
+          value={removeList}
+        >
           <div style={{ width: "100%" }}>
             {data.map((item: FileItem) => (
               <div
                 key={item.hash}
                 style={{
-                  backgroundColor: 'var(--color-2)',
-                  marginBottom: '24px'
+                  backgroundColor: "var(--color-2)",
+                  marginBottom: "24px",
                 }}
               >
                 <div className={styles.CheckboxGroup}>
@@ -186,7 +218,7 @@ export default function CalculateListPage() {
                 </div>
                 <div
                   style={{
-                    border: '1px solid var(--color-1)',
+                    border: "1px solid var(--color-1)",
                     padding: "12px 3px",
                   }}
                   className={styles.CheckboxGroup}
@@ -204,6 +236,8 @@ export default function CalculateListPage() {
           </div>
         </Checkbox.Group>
       </div>
+      </Spin>
+      
     </div>
   );
 }
