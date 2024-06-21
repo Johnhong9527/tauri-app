@@ -13,7 +13,7 @@ import {
   PaginationProps,
   Popconfirm,
 } from "antd";
-import type { PopconfirmProps } from 'antd';
+import type { PopconfirmProps } from "antd";
 import { useEffect, useState } from "react";
 const { Option } = Select;
 import { historyListType, insertSearchFilesPasamsType } from "@/types/files";
@@ -26,17 +26,17 @@ import {
   get_all_history,
   get_info_by_path,
   insertSeletedFileHistory,
-  updateSelectedFileHistory
+  updateSelectedFileHistory,
 } from "@/services";
 import dayjs from "dayjs";
 import { DEFAULT_TIME_FORMAT } from "@/config";
 
 import Database from "tauri-plugin-sql-api";
 import { createSql } from "@/databases/createTableSql";
-import {useRoutes} from "react-router";
-import {useNavigate} from "react-router-dom";
-const db = await Database.load("sqlite:test.db");
-const filesDB = await Database.load("sqlite:files.db");
+import { useRoutes } from "react-router";
+import { useNavigate } from "react-router-dom";
+import { appDataDir } from "@tauri-apps/api/path";
+import File from "@/plugins/tauri-plugin-file/file";
 
 const { Search } = Input;
 const { TextArea } = Input;
@@ -50,7 +50,7 @@ export default function DuplicateFile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileInfo, setFileInfo] = useState<any>({});
   const [fileInfoSource, setFileInfoSource] = useState<FileInfoType>({});
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const columns = [
     {
@@ -59,7 +59,7 @@ export default function DuplicateFile() {
       key: "id",
       width: 30,
       render: (text: string, record: { id?: number }) => (
-        <CopyText width="30px" color="#333" name={record.id || ''}></CopyText>
+        <CopyText width="30px" color="#333" name={record.id || ""}></CopyText>
       ),
     },
     {
@@ -72,7 +72,7 @@ export default function DuplicateFile() {
           width="300px"
           ellipsisLine={1}
           color="#333"
-          name={record.path || ''}
+          name={record.path || ""}
         ></CopyText>
       ),
     },
@@ -86,7 +86,7 @@ export default function DuplicateFile() {
           width="100px"
           ellipsisLine={1}
           color="#333"
-          name={record.time || ''}
+          name={record.time || ""}
         ></CopyText>
       ),
     },
@@ -112,14 +112,19 @@ export default function DuplicateFile() {
           <Button onClick={() => openModal(record)} type="default">
             修改
           </Button>
-          <Button type="primary" onClick={() => calculateDuplicateFiles(record)}>运行</Button>
+          <Button
+            type="primary"
+            onClick={() => calculateDuplicateFiles(record)}
+          >
+            运行
+          </Button>
 
           <Popconfirm
-              title="Delete the task"
-              description="Are you sure to delete this task?"
-              onConfirm={() => delRow(record)}
-              okText="Yes"
-              cancelText="No"
+            title="Delete the task"
+            description="Are you sure to delete this task?"
+            onConfirm={() => delRow(record)}
+            okText="Yes"
+            cancelText="No"
           >
             <Button type="primary" danger>
               删除
@@ -131,28 +136,26 @@ export default function DuplicateFile() {
   ];
 
   useEffect(() => {
-    getFileList()
-  }, [current])
+    getFileList();
+  }, [current]);
 
   async function handleOk(newFileInfo: FileInfoType, callback?: Function) {
     try {
-      let method = insertSeletedFileHistory
-      if(fileInfoSource && JSON.stringify(fileInfoSource) !== '{}') {
-        method = updateSelectedFileHistory
+      let method = insertSeletedFileHistory;
+      if (fileInfoSource && JSON.stringify(fileInfoSource) !== "{}") {
+        method = updateSelectedFileHistory;
       }
       const res = await method(newFileInfo.path, newFileInfo);
-      if(res) {
-        message.error(`${res}`)
-        return
+      if (res) {
+        message.error(`${res}`);
+        return;
       }
       setIsModalOpen(false);
-      setFileInfoSource({})
-      setFileList([])
+      setFileInfoSource({});
+      setFileList([]);
       await getFileList();
       callback && callback();
-    } catch (err) {
-    }
-
+    } catch (err) {}
   }
   function handleCancel() {
     setFileInfo({});
@@ -160,45 +163,58 @@ export default function DuplicateFile() {
   }
 
   async function delRow(row: FileInfoType) {
-    const res = await delSelectedFileHistory(row.path)
-    if(!res) {
-      setFileInfoSource({})
-      setFileList([])
+    // 删除对应的查询数据库的文件
+    const appDataDirPath = await appDataDir();
+    const dbPath = `${appDataDirPath}/files_${row.id}.db`;
+    const dbShmPath = `${appDataDirPath}/files_${row.id}.db-shm`;
+    const dbWalPath = `${appDataDirPath}/files_${row.id}.db-wal`;
+    await File.rmFile(dbPath);
+    await File.rmFile(dbShmPath);
+    await File.rmFile(dbWalPath);
+    const res = await delSelectedFileHistory(row.path);
+    if (!res) {
+      setFileInfoSource({});
+      setFileList([]);
       await getFileList();
     } else {
-      message.error(`${res}`)
+      message.error(`${res}`);
     }
   }
 
   async function openModal(info?: FileInfoType) {
     setIsModalOpen(true);
-    if(info) {
+    if (info) {
       setFileInfoSource({
         ...info,
-        checkedSizeValues: info && info?.checkedSizeValues ? `${info.checkedSizeValues}`.split(',') : [],
-        checkedTypeValues: info && info?.checkedTypeValues ? `${info.checkedTypeValues}`.split(',') : []
-      })
+        checkedSizeValues:
+          info && info?.checkedSizeValues
+            ? `${info.checkedSizeValues}`.split(",")
+            : [],
+        checkedTypeValues:
+          info && info?.checkedTypeValues
+            ? `${info.checkedTypeValues}`.split(",")
+            : [],
+      });
     }
   }
   async function getFileList() {
-    const {data, total: localeTotal} = await get_all_history(current - 1, 10);
-    const newFileList = data.map(item => {
+    const { data, total: localeTotal } = await get_all_history(current - 1, 10);
+    const newFileList = data.map((item) => {
       return {
         ...item,
-        time: dayjs(item.time).format(DEFAULT_TIME_FORMAT)
-      }
-    })
-    setFileList(newFileList)
-    setTotal(localeTotal)
+        time: dayjs(item.time).format(DEFAULT_TIME_FORMAT),
+      };
+    });
+    setFileList(newFileList);
+    setTotal(localeTotal);
   }
 
-  const onPaginationChange: PaginationProps['onChange'] = (page) => {
+  const onPaginationChange: PaginationProps["onChange"] = (page) => {
     setCurrent(page);
   };
 
-
   function calculateDuplicateFiles(record: FileInfoType) {
-    navigate('calculate/' + record.id)
+    navigate("calculate/" + record.id);
   }
   return (
     <div className={styles.DuplicateFileBox}>
@@ -237,7 +253,11 @@ export default function DuplicateFile() {
         />
       </Row>
       <Row justify="end" style={{ width: "100%", marginTop: "12px" }}>
-        <Pagination current={current} total={total} onChange={onPaginationChange} />
+        <Pagination
+          current={current}
+          total={total}
+          onChange={onPaginationChange}
+        />
       </Row>
     </div>
   );

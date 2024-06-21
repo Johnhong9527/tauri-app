@@ -1,7 +1,5 @@
 #![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
-// mod files;
-// use crate::files::{file_struct, file_tools};
 mod menus;
 mod event_loop;
 mod self_plugin;
@@ -9,24 +7,17 @@ mod common;
 mod utils;
 mod servics;
 
-
 use crate::menus::default::use_memu;
 use crate::menus::event::m_event;
 use crate::event_loop::{greet, file_path, file_sort};
-// use self_plugin::tauri_plugin_sqlite;
 use self_plugin::tauri_plugin_file;
 use servics::files_servics;
-
-
-use tauri::{Manager, generate_context};
-// use tauri_plugin_sql::{Builder as SqlBuilder, TauriSql};
 use tauri::api::path::app_data_dir;
-
-use tauri_plugin_sql::{Migration, MigrationKind};
 
 fn main() {
     tauri::Builder::default()
         // .plugin(tauri_plugin_sqlite::init())
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_file::init())
         .plugin(files_servics::init())
         .plugin(

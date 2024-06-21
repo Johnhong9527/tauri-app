@@ -38,6 +38,10 @@ git = "https://gitee.com/seamong/plugins-workspace"
 branch = "v1"
 features = ["sqlite"] # or "postgres", or "mysql"
 
+[dependencies.tauri-plugin-persisted-scope]
+git = "https://gitee.com/seamong/plugins-workspace"
+branch = "v1"
+
 [workspace]
 #members = ["modules"]
 
