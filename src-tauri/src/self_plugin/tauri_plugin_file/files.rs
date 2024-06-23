@@ -1,6 +1,7 @@
 use hex;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest as OtherDigest, Sha256}; // 确保导入 `Digest`
+use sha2::{Digest as OtherDigest, Sha256}; use std::ffi::OsStr;
+// 确保导入 `Digest`
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -297,5 +298,48 @@ pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
             msg: Some("error".to_string()),
             data: Some(e.to_string()),
         },
+    }
+}
+
+
+// 批量移动指定的多个文件到一个目标目录
+#[command]
+pub fn move_specific_files(file_paths: Vec<PathBuf>, dest_dir: &str) -> RequestMvFile {
+    // 检查目标目录
+    let destination = Path::new(dest_dir);
+    if !destination.is_dir() {
+        return RequestMvFile {
+            code: Some(400),
+            msg: Some("Destination directory does not exist or is not a directory.".to_string()),
+            data: Some("Destination directory does not exist or is not a directory.".to_string()),
+        };
+    }
+
+    // 遍历提供的文件路径列表
+    for file_path in file_paths {
+        if file_path.is_file() {  // 确保路径是文件
+            let dest_file_path = destination.join(
+                file_path.file_name().unwrap_or_else(|| OsStr::new(""))
+            );
+            if let Err(e) = fs::rename(&file_path, &dest_file_path) {
+                return RequestMvFile {
+                    code: Some(500),
+                    msg: Some(format!("Failed to move file '{}': {}", file_path.display(), e)),
+                    data: Some(format!("Failed to move file '{}': {}", file_path.display(), e)),
+                };
+            }
+        } else {
+            return RequestMvFile {
+                code: Some(400),
+                msg: Some(format!("Provided path '{}' is not a file.", file_path.display())),
+                data: Some(format!("Provided path '{}' is not a file.", file_path.display())),
+            };
+        }
+    }
+
+    RequestMvFile {
+        code: Some(200),
+        msg: Some("All specified files moved successfully.".to_string()),
+        data: Some("All specified files moved successfully.".to_string()),
     }
 }
