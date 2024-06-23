@@ -8,6 +8,7 @@ import {
   Space,
   Button,
   Spin,
+  Empty,
 } from "antd";
 import type { CheckboxProps } from "antd";
 import { useEffect, useState } from "react";
@@ -102,6 +103,14 @@ export default function CalculateListPage() {
 
   const CheckboxContent = (item: insertSearchFilesPasamsType) => (
     <div className={styles.CheckboxContent}>
+      <div className={styles.modified_time}>
+        <CopyText
+          width="100px"
+          color="#333"
+          ellipsisLine={0}
+          name={item.name || ""}
+        ></CopyText>
+      </div>
       <div className={styles.path}>
         <CopyText
           width="300px"
@@ -124,14 +133,7 @@ export default function CalculateListPage() {
           name={item.file_size || ""}
         ></CopyText>
       </div>
-      <div className={styles.modified_time}>
-        <CopyText
-          width="100px"
-          color="#333"
-          ellipsisLine={1}
-          name={item.name || ""}
-        ></CopyText>
-      </div>
+
     </div>
   );
   const waittime = (time = 100) => {
@@ -256,6 +258,10 @@ export default function CalculateListPage() {
                   </div>
                 </div>
               ))}
+              {!data.length && <div style={{
+                padding: '48px 0',
+                backgroundColor: '#fff'
+              }}><Empty description={'当前目录没有找到重复的文件'}/></div>}
             </div>
           </Checkbox.Group>
         </div>
