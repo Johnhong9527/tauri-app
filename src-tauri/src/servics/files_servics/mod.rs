@@ -1,4 +1,4 @@
-pub(crate) mod files_servics;
+// pub(crate) mod files_servics;
 
 pub mod migrations; // 定义数据库迁移模块
 use tauri::{
@@ -6,7 +6,7 @@ use tauri::{
 };
 
 
-use self::files_servics::*;
+// use self::files_servics::*;
 
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -15,7 +15,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             // is_create,
             // create,
             // inset,
-            test2
+            // test2
         ])
         .setup(|_app| {
             Ok(())

@@ -54,3 +54,6 @@ https://github.com/launchbadge/sqlx
 
 - https://github.com/Johnhong9527/tauri-plugin-sql
 - https://gitee.com/seamong/tauri-plugin-sql
+
+## 1.1.0 更新说明
+移除项目中的所有冗余代码

@@ -1,9 +1,12 @@
-use tauri_plugin_sql::{Migration, MigrationKind};
+use tauri_plugin_sql::{
+    Migration, 
+    // MigrationKind
+};
 
 // 这里维护可配置的
 pub fn set_files_migrations() -> Vec<Migration> {
     vec![
-        // Define your migrations here
+       /*  // Define your migrations here
         Migration {
             version: 1,
             description: "create_initial_tables",
@@ -69,7 +72,7 @@ pub fn set_files_migrations() -> Vec<Migration> {
             description: "恢复sourceId的数据",
             sql: "ALTER TABLE search_files ADD sourceId INTEGER;UPDATE search_files SET sourceId = source2Id;ALTER TABLE search_files DROP COLUMN source2Id;",
             kind: MigrationKind::Up,
-        }
+        } */
     ]
 }
 // migrations 增加字段, 删除字段、修改字段、无法修改字段类型

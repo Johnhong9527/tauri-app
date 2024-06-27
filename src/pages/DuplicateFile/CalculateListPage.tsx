@@ -17,14 +17,19 @@ import {
   get_fileInfo_by_id,
   searchDuplicateFile,
 } from "@/services";
-import { message as tauriMessage, save as dialogSave } from "@tauri-apps/api/dialog";
-import { appDataDir, join } from '@tauri-apps/api/path';
+import {
+  message as tauriMessage,
+  save as dialogSave,
+  open as dialogopen,
+} from "@tauri-apps/api/dialog";
+import { appDataDir, homeDir, join } from "@tauri-apps/api/path";
 import styles from "./CalculateListPage.module.less";
 import { useParams } from "react-router";
 import { insertSearchFilesPasamsType } from "@/types/files";
 import type { GetProp } from "antd";
 import File from "@/plugins/tauri-plugin-file/file";
 import { CopyText } from "@/components/Table/CopyText";
+import { FolderOpenOutlined } from "@ant-design/icons";
 
 export default function CalculateListPage() {
   let { fileId } = useParams();
@@ -100,12 +105,18 @@ export default function CalculateListPage() {
       setRemoveList(checkedValues);
     }
   };
+  const openFileShowInExplorer = async (path: string) => {
+    const res = await File.showFileInExplorer(path);
+  };
 
   const CheckboxContent = (item: insertSearchFilesPasamsType) => (
     <div className={styles.CheckboxContent}>
+      <div>
+        <FolderOpenOutlined onClick={() => openFileShowInExplorer(item.path)} />
+      </div>
       <div className={styles.modified_time}>
         <CopyText
-          width="100px"
+          width="300px"
           color="#333"
           ellipsisLine={0}
           name={item.name || ""}
@@ -120,20 +131,21 @@ export default function CalculateListPage() {
         ></CopyText>
       </div>
       <div className={styles.modified_time}>
-        <CopyText
+        {/* <CopyText
           width="100px"
           color="#333"
           name={item.modified_time || ""}
-        ></CopyText>
+        ></CopyText> */}
+        {item.modified_time}
       </div>
       <div className={styles.modified_time}>
-        <CopyText
+        {/* <CopyText
           width="100px"
           color="#333"
           name={item.file_size || ""}
-        ></CopyText>
+        ></CopyText> */}
+        {item.file_size}
       </div>
-
     </div>
   );
   const waittime = (time = 100) => {
@@ -189,9 +201,17 @@ export default function CalculateListPage() {
   }
   async function openDialogSave() {
     // const appDataDir = await File.getAppDataDir();
-    const appDataDirPath = await appDataDir();
-    console.log(190, appDataDirPath);
-
+    // const appDataDirPath = await appDataDir();
+    // console.log(190, appDataDirPath);
+    // 打开本地的系统目录，暂时不支持多选
+    const selected = await dialogopen({
+      title: "请选择需要保存的目录",
+      directory: true,
+      multiple: false,
+      defaultPath: await homeDir(),
+    });
+    console.log(213, selected);
+    await File.moveSpecificFiles(['/Users/honghaitao/Downloads/Xnip2023-05-31_21-39-11_副本.png'], `${selected}`)
     return;
     // dialogSave
     const filePath = await dialogSave({
@@ -264,6 +284,16 @@ export default function CalculateListPage() {
               }}><Empty description={'当前目录没有找到重复的文件'}/></div>}
             </div>
           </Checkbox.Group>
+          {!data.length && (
+            <div
+              style={{
+                padding: "48px 0",
+                backgroundColor: "#fff",
+              }}
+            >
+              <Empty description={"当前目录没有找到重复的文件"} />
+            </div>
+          )}
         </div>
       </Spin>
     </div>

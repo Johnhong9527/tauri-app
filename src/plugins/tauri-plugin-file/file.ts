@@ -27,13 +27,13 @@ export class File {
       filePath: path,
     });
   }
-  
+
   static async getInfo(path: string): Promise<any> {
     return await invoke<string>("plugin:st-files|get_file_info", {
       filePath: path,
     });
   }
-  
+
   static async rmFile(path: string): Promise<any> {
     return await invoke<string>("plugin:st-files|mv_file_to_trash", {
       filePath: path,
@@ -41,6 +41,17 @@ export class File {
   }
   static async getAppDataDir(): Promise<string> {
     return await invoke<string>("plugin:st-files|get_app_data_dir");
+  }
+  static async showFileInExplorer(filePath: string): Promise<string> {
+    return await invoke<string>("plugin:st-files|show_file_in_explorer", {
+      filePath
+    });
+  }
+  static async moveSpecificFiles(filePaths: string[], destDir: string): Promise<string> {
+    return await invoke<string>("plugin:st-files|move_specific_files", {
+      filePaths,
+      destDir
+    });
   }
 
   // async close(): Promise<boolean> {

@@ -19,7 +19,7 @@ import { PlusCircleOutlined, RedoOutlined } from "@ant-design/icons";
 import styles from "./FileInfoEditer.module.less";
 
 import { open } from "@tauri-apps/api/dialog";
-import { appDataDir } from "@tauri-apps/api/path";
+import { appDataDir, homeDir } from "@tauri-apps/api/path";
 
 /* 导入类型 */
 import { FileInfoEditerType, FileInfoType } from "@/types/files";
@@ -51,7 +51,7 @@ export default function FileInfoEditer({
     const selected = await open({
       directory: true,
       multiple: false,
-      defaultPath: await appDataDir(),
+      defaultPath: await homeDir(),
     });
     console.log(55, selected);
 

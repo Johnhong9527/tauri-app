@@ -16,7 +16,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             calculate_file_hash,
             get_file_info,
             mv_file_to_trash,
-            get_app_data_dir
+            get_app_data_dir,
+            // open_finder
+            show_file_in_explorer,
+            move_specific_files
             // get_file_info_by_path,
         ])
         .setup(|_app| {
