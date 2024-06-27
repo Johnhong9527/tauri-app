@@ -278,6 +278,10 @@ export default function CalculateListPage() {
                   </div>
                 </div>
               ))}
+              {!data.length && <div style={{
+                padding: '48px 0',
+                backgroundColor: '#fff'
+              }}><Empty description={'当前目录没有找到重复的文件'}/></div>}
             </div>
           </Checkbox.Group>
           {!data.length && (

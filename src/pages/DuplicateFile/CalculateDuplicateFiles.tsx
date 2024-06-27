@@ -192,6 +192,7 @@ export default function CalculateDuplicateFiles() {
   // 计算每一个文件的hash
   async function computeFileChecksums() {
     const [allList, allListMsg] = await get_list_by_sourceid(`${fileId}`);
+    console.log(195, allList, allListMsg);
     if (allList && Array.isArray(allList)) {
       let fileIndex = -1;
       let allFilesLength = allList.length;
@@ -209,6 +210,7 @@ export default function CalculateDuplicateFiles() {
             prevPromise: any,
             currentFile: insertSearchFilesPasamsType
           ) => {
+            console.log(213, '获取文件类型和哈希');
             // 等待上一个 Promise 完成
             await prevPromise;
             // 获取文件类型和哈希
