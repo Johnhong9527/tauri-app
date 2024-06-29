@@ -1,9 +1,13 @@
 use hex;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest as OtherDigest, Sha256}; use std::ffi::OsStr;
+use sha2::{Digest as OtherDigest, Sha256};
+use std::ffi::OsStr;
 // 确保导入 `Digest`
+use async_std::fs as async_std_fs;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::thread;
+use std::time;
 use std::time::UNIX_EPOCH;
 use tauri::command;
 extern crate trash;
@@ -126,8 +130,13 @@ fn file_type_matches(path: &Path, types: &Vec<String>) -> bool {
 }
 
 #[command]
-pub fn calculate_file_hash(file_path: String) -> String {
-    let file_bytes = fs::read(file_path).expect("Failed to read file");
+// 定义异步函数来计算文件的 SHA256 哈希
+pub async fn calculate_file_hash(file_path: String) -> String {
+    // 异步读取文件
+    let file_bytes = match async_std_fs::read(file_path).await {
+        Ok(bytes) => bytes,
+        Err(_) => return "Failed to read file".to_string(), // 如果读取失败，返回错误信息
+    };
 
     // 初始化 SHA256 哈希上下文
     let mut hasher = Sha256::new();
@@ -227,7 +236,7 @@ pub fn mv_file_to_trash(file_path: String) -> RequestMvFile {
 #[command]
 pub fn get_app_data_dir() -> String {
     std::env::var("MY_APP_DATA_DIR")
-    .unwrap_or_else(|_| "Environment variable for app data directory not set".to_string())
+        .unwrap_or_else(|_| "Environment variable for app data directory not set".to_string())
 }
 
 /* #[command]
@@ -254,17 +263,19 @@ fn open_finder(path: String) -> RequestMvFile {
 
 #[command]
 pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
-    println!("256 {}",file_path);
+    println!("256 {}", file_path);
     // 获取文件所在的目录
     #[cfg(target_os = "linux")]
     let path = std::path::Path::new(&file_path);
     #[cfg(target_os = "linux")]
     let parent_dir = match path.parent() {
         Some(dir) => dir.to_str().unwrap_or(""),
-        None => return RequestMvFile {
-            code: Some(500),
-            msg: Some("No parent directory found.".to_string()),
-            data: Some("No parent directory found.".to_string()),
+        None => {
+            return RequestMvFile {
+                code: Some(500),
+                msg: Some("No parent directory found.".to_string()),
+                data: Some("No parent directory found.".to_string()),
+            }
         }
     };
 
@@ -301,7 +312,6 @@ pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
     }
 }
 
-
 // 批量移动指定的多个文件到一个目标目录
 #[command]
 pub fn move_specific_files(file_paths: Vec<PathBuf>, dest_dir: &str) -> RequestMvFile {
@@ -317,22 +327,36 @@ pub fn move_specific_files(file_paths: Vec<PathBuf>, dest_dir: &str) -> RequestM
 
     // 遍历提供的文件路径列表
     for file_path in file_paths {
-        if file_path.is_file() {  // 确保路径是文件
-            let dest_file_path = destination.join(
-                file_path.file_name().unwrap_or_else(|| OsStr::new(""))
-            );
+        if file_path.is_file() {
+            // 确保路径是文件
+            let dest_file_path =
+                destination.join(file_path.file_name().unwrap_or_else(|| OsStr::new("")));
             if let Err(e) = fs::rename(&file_path, &dest_file_path) {
                 return RequestMvFile {
                     code: Some(500),
-                    msg: Some(format!("Failed to move file '{}': {}", file_path.display(), e)),
-                    data: Some(format!("Failed to move file '{}': {}", file_path.display(), e)),
+                    msg: Some(format!(
+                        "Failed to move file '{}': {}",
+                        file_path.display(),
+                        e
+                    )),
+                    data: Some(format!(
+                        "Failed to move file '{}': {}",
+                        file_path.display(),
+                        e
+                    )),
                 };
             }
         } else {
             return RequestMvFile {
                 code: Some(400),
-                msg: Some(format!("Provided path '{}' is not a file.", file_path.display())),
-                data: Some(format!("Provided path '{}' is not a file.", file_path.display())),
+                msg: Some(format!(
+                    "Provided path '{}' is not a file.",
+                    file_path.display()
+                )),
+                data: Some(format!(
+                    "Provided path '{}' is not a file.",
+                    file_path.display()
+                )),
             };
         }
     }
