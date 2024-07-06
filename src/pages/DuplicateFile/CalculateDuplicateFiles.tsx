@@ -14,7 +14,7 @@ import {
 import { message } from "@tauri-apps/api/dialog";
 import styles from "./CalculateDuplicateFiles.module.less";
 import File from "@/plugins/tauri-plugin-file/file";
-import { Button, Col, Row, Steps } from "antd";
+import { Button, Col, Row, Steps, Space } from "antd";
 import { fileTypeList } from "./config";
 import get_progress_by_sourceId, {
   get_fileInfo_by_path,
@@ -218,7 +218,7 @@ export default function CalculateDuplicateFiles() {
   // 计算每一个文件的hash
   async function computeFileChecksums_2() {
     const [progressRes] = await get_progress_by_sourceId(`${fileId}`);
-    console.log(178, progressRes)
+    // console.log(178, progressRes)
 
     // 已经存在的数据中，计算过的 hash 总量跟 文件总数不是一样的，并且存在有记录的文件
     if (progressRes.hash_null_count && progressRes.total_entries) {
@@ -251,13 +251,14 @@ export default function CalculateDuplicateFiles() {
               const hash = await File.getHash(fileinfo.path);
               await updateFileHsah(fileinfo.path, hash, `${fileId}`);
             }
-            console.clear();  // 清除控制台
+            // console.clear();  // 清除控制台
             // console.log(223, window.location.href, location.pathname, fileinfo);
-            console.log(223, window.location.href.indexOf(location.pathname), location.pathname);
+            // console.log(223, window.location.href.indexOf(location.pathname), location.pathname);
             fileIndex++;
             await waittime();
-            setPercent(Math.floor((fileIndex / allFilesLength) * 100));
-            setDuplicateFilesStep(`: ${fileIndex} / ${allFilesLength}`);
+            const [newProgressRes] = await get_progress_by_sourceId(`${fileId}`);
+            setPercent(Math.floor((fileIndex / newProgressRes.hash_null_count) * 100));
+            setDuplicateFilesStep(`: ${fileIndex} / ${newProgressRes.hash_null_count}`);
             return Promise.resolve(0)
           },
           Promise.resolve(0)
@@ -294,6 +295,10 @@ export default function CalculateDuplicateFiles() {
     return types;
   }
 
+
+  function toNextPage() {
+    navigate("/calculate-list/" + fileId);
+  }
   return (
     <div className={styles.CalculateDuplicateFiles}>
       <Row justify="start" align="middle">
@@ -303,9 +308,14 @@ export default function CalculateDuplicateFiles() {
           </div>
         </Col>
         <Col>
-          <Button type="primary" onClick={() => scanDirAll()}>
-            开始
-          </Button>
+          <Space>
+            <Button type="primary" onClick={() => scanDirAll()}>
+              开始
+            </Button>
+            <Button type="primary" onClick={() => toNextPage()}>
+              预览重复数据
+            </Button>
+          </Space>
         </Col>
       </Row>
 

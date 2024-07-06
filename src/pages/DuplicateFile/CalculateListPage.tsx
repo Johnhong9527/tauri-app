@@ -35,6 +35,7 @@ export default function CalculateListPage() {
   let { fileId } = useParams();
   const [data, setData] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [tip, setTip] = useState<string>('');
   const [removeList, setRemoveList] = useState<string[]>([]);
   interface FileItem {
     sourceId: number;
@@ -45,9 +46,12 @@ export default function CalculateListPage() {
     otherItems: insertSearchFilesPasamsType[];
   }
   const appendData = async () => {
+    setLoading(true)
+    setTip('正在统计中');
     const [isError, searchDuplicateFileRes] = await searchDuplicateFile({
       sourceId: `${fileId}`,
     });
+    console.log(5151, isError)
     if (!isError) {
       typeof searchDuplicateFileRes === "string" &&
         (await tauriMessage(searchDuplicateFileRes, {
@@ -57,11 +61,13 @@ export default function CalculateListPage() {
     }
 
     if (Array.isArray(searchDuplicateFileRes)) {
+      let index = -1
       const newData: any[] = [];
       await searchDuplicateFileRes.reduce(
         async (prevPromise: any, currentFile: any) => {
           // 等待上一个 Promise 完成
           await prevPromise;
+          index++
           const ids = currentFile.ids.split(",");
           const firstItem = await get_fileInfo_by_id(ids[0], `${fileId}`);
           const otherItems = await Promise.allSettled(
@@ -88,12 +94,15 @@ export default function CalculateListPage() {
               })
               .filter((elm: any) => elm),
           });
+          setTip(`正在统计中: ${Math.floor((index / searchDuplicateFileRes.length) * 100)}% : ${searchDuplicateFileRes.length - index}`);
           return Promise.resolve(0);
         },
         Promise.resolve(0)
       );
       setData(newData);
     }
+    setLoading(false)
+    setTip('')
   };
 
   useEffect(() => {
@@ -226,10 +235,11 @@ export default function CalculateListPage() {
   }
   return (
     <div className={styles.CalculateListPage}>
-      <Spin spinning={loading}>
+      <Spin spinning={loading} tip={tip}>
         <div
           style={{
             padding: "24px",
+            minHeight: '50vh'
           }}
         >
           <Space>
@@ -280,7 +290,7 @@ export default function CalculateListPage() {
               ))}
             </div>
           </Checkbox.Group>
-          {!data.length && (
+          {!data.length && !loading && (
             <div
               style={{
                 padding: "48px 0",
