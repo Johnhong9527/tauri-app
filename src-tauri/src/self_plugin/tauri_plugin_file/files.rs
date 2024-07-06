@@ -37,10 +37,11 @@ pub struct FileInfo {
     pub id: Option<u32>,
     pub progress: Option<f32>,
     pub types: Option<Vec<String>>,
+    pub excluded_file_names: Option<Vec<String>>,
 }
 
 #[command]
-pub fn get_all_directory(file_info: FileInfo) -> Vec<PathBuf> {
+pub fn get_all_directory(file_info: FileInfo) -> Vec<FileInfos> {
     let mut files = Vec::new();
     if let Some(ref path) = file_info.path {
         println!("Processing directory: {}", path);
@@ -50,6 +51,7 @@ pub fn get_all_directory(file_info: FileInfo) -> Vec<PathBuf> {
             &mut files,
             &file_info.checked_size_values,
             &file_info.types,
+            &file_info.excluded_file_names,
         );
         files
     } else {
@@ -74,33 +76,43 @@ pub fn get_file_type_by_path(file_path: String) -> String {
 
 fn read_files_in_directory(
     dir: &Path,
-    files: &mut Vec<PathBuf>,
+    files: &mut Vec<FileInfos>,
     filters: &Option<Vec<FileSizeCategory>>,
     types: &Option<Vec<String>>,
+    excluded_file_names: &Option<Vec<String>>,
 ) {
     if dir.is_dir() {
-        // 尝试读取目录，忽略错误
         if let Ok(entries) = fs::read_dir(dir) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        // 递归调用，忽略错误
-                        read_files_in_directory(&path, files, filters, types);
-                    } else {
-                        // 尝试获取文件元数据，忽略错误
-                        if let Ok(metadata) = fs::metadata(&path) {
-                            let size = metadata.len();
-                            let size_matches = filters.is_none()
-                                || file_size_matches(size, filters.as_ref().unwrap());
-                            let type_matches = types.is_none()
-                                || file_type_matches(&path, types.as_ref().unwrap());
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    read_files_in_directory(&path, files, filters, types, excluded_file_names);
+                    continue;
+                }
 
-                            if size_matches && type_matches {
-                                files.push(path);
-                            }
+                if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
+                    if let Some(excluded_names) = excluded_file_names {
+                        if excluded_names.contains(&String::from(file_name)) {
+                            continue;
                         }
                     }
+                }
+
+                let metadata = if let Ok(meta) = path.metadata() { meta } else { continue };
+                let size_matches = filters.as_ref().map_or(true, |f| file_size_matches(metadata.len(), f));
+                let type_matches = types.as_ref().map_or(true, |t| file_type_matches(&path, t));
+                if size_matches && type_matches {
+                    if let Some(path_str) = path.to_str() {
+                        // 确保 path_str 是有效的 UTF-8 字符串
+                        let path_info = get_file_info(path_str.to_string());
+                        // 使用 path_info 做其他事情
+                        files.push(path_info);
+                    } else {
+                        // 处理 path 不是有效 UTF-8 的情况
+                        // eprintln!("Path is not valid UTF-8");
+                        continue;
+                    }
+
                 }
             }
         }
@@ -124,6 +136,15 @@ fn file_type_matches(path: &Path, types: &Vec<String>) -> bool {
     if let Some(ext) = path.extension() {
         if let Some(ext_str) = ext.to_str() {
             return types.iter().any(|type_str| type_str == ext_str);
+        }
+    }
+    false
+}
+
+fn excluded_file_names_matches(path_name: &str, excluded_file_names: &Vec<String>) -> bool {
+    for excluded_name in excluded_file_names {
+        if path_name == excluded_name {
+            return true;
         }
     }
     false
