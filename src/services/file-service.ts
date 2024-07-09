@@ -347,6 +347,13 @@ export async function searchDuplicateFile({
     const res: DuplicateFileInfo[] = await DB.select(
       `SELECT hash,
        sourceId,
+       id,
+       creation_time,
+       modified_time,
+       file_size,
+       type,
+       name,
+       path,
        GROUP_CONCAT(id)    AS ids,
        COUNT(*)           AS count
 FROM search_files

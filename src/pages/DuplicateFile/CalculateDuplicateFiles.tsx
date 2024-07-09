@@ -255,7 +255,7 @@ export default function CalculateDuplicateFiles() {
             // console.log(223, window.location.href, location.pathname, fileinfo);
             // console.log(223, window.location.href.indexOf(location.pathname), location.pathname);
             fileIndex++;
-            await waittime();
+            // await waittime();
             const [newProgressRes] = await get_progress_by_sourceId(`${fileId}`);
             setPercent(Math.floor((fileIndex / newProgressRes.hash_null_count) * 100));
             setDuplicateFilesStep(`: ${fileIndex} / ${newProgressRes.hash_null_count}`);

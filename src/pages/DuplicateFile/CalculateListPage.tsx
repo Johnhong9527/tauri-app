@@ -59,7 +59,23 @@ export default function CalculateListPage() {
           type: "error",
         }));
     }
-
+    /*count
+        :
+        2
+    hash
+        :
+        "fdd8051fcf884d8cc9a095cd77a58694e13b066aea68dc1fc353767ab0ebfe01"
+    ids
+        :
+        "25494,26393"
+    sourceId
+        :
+        6*/
+    setTip('');
+    setLoading(false);
+    setData(searchDuplicateFileRes as any);
+    console.log(63, searchDuplicateFileRes);
+    return
     if (Array.isArray(searchDuplicateFileRes)) {
       let index = -1
       const newData: any[] = [];
@@ -258,7 +274,7 @@ export default function CalculateListPage() {
             value={removeList}
           >
             <div style={{ width: "100%" }}>
-              {data.map((item: FileItem) => (
+              {data.map((item: any) => (
                 <div
                   key={item.hash}
                   style={{
@@ -267,8 +283,9 @@ export default function CalculateListPage() {
                   }}
                 >
                   <div className={styles.CheckboxGroup}>
-                    <Checkbox value={item.firstItem.path}>
-                      {CheckboxContent(item.firstItem)}
+                    <Checkbox value={item.path}>
+                      {/*{CheckboxContent(item as any)}*/}
+                      {item.path}
                     </Checkbox>
                   </div>
                   <div
@@ -278,10 +295,18 @@ export default function CalculateListPage() {
                     }}
                     className={styles.CheckboxGroup}
                   >
-                    {item.otherItems.map((otherItem) => (
+                    {/*{item.otherItems.map((otherItem) => (
                       <div key={otherItem.path}>
                         <Checkbox value={otherItem.path}>
                           {CheckboxContent(otherItem)}
+                        </Checkbox>
+                      </div>
+                    ))}*/}
+                    {item.ids.split(',').map((id_name: string) => (
+                      <div key={id_name}>
+                        <Checkbox value={id_name}>
+                          {/*{CheckboxContent(id_name as any)}*/}
+                          {id_name}
                         </Checkbox>
                       </div>
                     ))}
