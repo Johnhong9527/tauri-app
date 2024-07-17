@@ -1,7 +1,10 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
 import Database from "tauri-plugin-sql-api";
-import {FileInfoType} from "@/types/files";
+import {
+  backFileInfoType,
+  fileInfoParamsType
+} from "@/types/files";
 
 export class File {
   path: string;
@@ -11,8 +14,8 @@ export class File {
   }
 
   // static async getAllList(fileInfo: FileInfoType): Promise<string[]> {
-  static async getAllList(fileInfo: any): Promise<string[]> {
-    return await invoke<string[]>("plugin:st-files|get_all_directory", {
+  static async getAllList(fileInfo: fileInfoParamsType): Promise<backFileInfoType[]> {
+    return await invoke<backFileInfoType[]>("plugin:st-files|get_all_directory", {
       fileInfo,
     });
   }

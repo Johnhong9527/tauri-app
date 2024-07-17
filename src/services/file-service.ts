@@ -269,21 +269,14 @@ export async function get_list_by_sourceid(
   sourceId: string
 ): Promise<[insertSearchFilesPasamsType[] | false, string]> {
   try {
-    // await table_init(FILE_DB_PATH, "select_history");
-    // const DB = await SQLite.open(FILE_DB_PATH);
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
     const res = await DB.select(
-      "SELECT * FROM search_files WHERE sourceId = $1",
+      "SELECT * FROM search_files WHERE sourceId = $1 AND (hash = '' OR hash IS NULL)",
       [sourceId]
     );
     console.log(969696, sourceId);
-
-    /* const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
-          "SELECT * FROM search_files WHERE sourceId = :sourceId GROUP BY hash HAVING COUNT(*) > 1",
-          { ":sourceId": sourceid }
-        ); */
     console.log(3434, res);
 
     if (Array.isArray(res)) {
@@ -347,13 +340,20 @@ export async function searchDuplicateFile({
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    /* 
+    /*
     select * from search_files where sourceId = $1 in (select sourceId from search_files group by hash having count(hash) > 1)
  */
     // const res = await DB.select("SELECT * from search_files WHERE sourceId = $1", [sourceId]);
     const res: DuplicateFileInfo[] = await DB.select(
       `SELECT hash,
        sourceId,
+       id,
+       creation_time,
+       modified_time,
+       file_size,
+       type,
+       name,
+       path,
        GROUP_CONCAT(id)    AS ids,
        COUNT(*)           AS count
 FROM search_files
@@ -487,5 +487,33 @@ export async function del_file_by_id(path: string, sourceId: string) {
       return "当前数据格式异常";
     }
     return Promise.resolve(error);
+  }
+}
+
+
+/*
+* 这个函数是获取到第一个hash为空的数据*/
+export async function getFirstEmptyHashBySourceId(sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    const res = await DB.select(
+        `SELECT * FROM search_files
+WHERE hash = '' OR hash IS NULL
+LIMIT 1;`,
+        [
+          sourceId
+        ]
+    );
+    if (Array.isArray(res) && res.length) {
+      return Promise.resolve([res[0], ""]);
+    }
+    return Promise.resolve([false, "暂无数据"]);
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return Promise.resolve([false, error]);
   }
 }

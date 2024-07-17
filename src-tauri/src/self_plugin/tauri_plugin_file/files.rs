@@ -1,9 +1,13 @@
 use hex;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest as OtherDigest, Sha256}; use std::ffi::OsStr;
+use sha2::{Digest as OtherDigest, Sha256};
+use std::ffi::OsStr;
 // 确保导入 `Digest`
+use async_std::fs as async_std_fs;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::thread;
+use std::time;
 use std::time::UNIX_EPOCH;
 use tauri::command;
 extern crate trash;
@@ -33,10 +37,11 @@ pub struct FileInfo {
     pub id: Option<u32>,
     pub progress: Option<f32>,
     pub types: Option<Vec<String>>,
+    pub excluded_file_names: Option<Vec<String>>,
 }
 
 #[command]
-pub fn get_all_directory(file_info: FileInfo) -> Vec<PathBuf> {
+pub fn get_all_directory(file_info: FileInfo) -> Vec<FileInfos> {
     let mut files = Vec::new();
     if let Some(ref path) = file_info.path {
         println!("Processing directory: {}", path);
@@ -46,6 +51,7 @@ pub fn get_all_directory(file_info: FileInfo) -> Vec<PathBuf> {
             &mut files,
             &file_info.checked_size_values,
             &file_info.types,
+            &file_info.excluded_file_names,
         );
         files
     } else {
@@ -70,33 +76,43 @@ pub fn get_file_type_by_path(file_path: String) -> String {
 
 fn read_files_in_directory(
     dir: &Path,
-    files: &mut Vec<PathBuf>,
+    files: &mut Vec<FileInfos>,
     filters: &Option<Vec<FileSizeCategory>>,
     types: &Option<Vec<String>>,
+    excluded_file_names: &Option<Vec<String>>,
 ) {
     if dir.is_dir() {
-        // 尝试读取目录，忽略错误
         if let Ok(entries) = fs::read_dir(dir) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        // 递归调用，忽略错误
-                        read_files_in_directory(&path, files, filters, types);
-                    } else {
-                        // 尝试获取文件元数据，忽略错误
-                        if let Ok(metadata) = fs::metadata(&path) {
-                            let size = metadata.len();
-                            let size_matches = filters.is_none()
-                                || file_size_matches(size, filters.as_ref().unwrap());
-                            let type_matches = types.is_none()
-                                || file_type_matches(&path, types.as_ref().unwrap());
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    read_files_in_directory(&path, files, filters, types, excluded_file_names);
+                    continue;
+                }
 
-                            if size_matches && type_matches {
-                                files.push(path);
-                            }
+                if let Some(file_name) = path.file_name().and_then(|name| name.to_str()) {
+                    if let Some(excluded_names) = excluded_file_names {
+                        if excluded_names.contains(&String::from(file_name)) {
+                            continue;
                         }
                     }
+                }
+
+                let metadata = if let Ok(meta) = path.metadata() { meta } else { continue };
+                let size_matches = filters.as_ref().map_or(true, |f| file_size_matches(metadata.len(), f));
+                let type_matches = types.as_ref().map_or(true, |t| file_type_matches(&path, t));
+                if size_matches && type_matches {
+                    if let Some(path_str) = path.to_str() {
+                        // 确保 path_str 是有效的 UTF-8 字符串
+                        let path_info = get_file_info(path_str.to_string());
+                        // 使用 path_info 做其他事情
+                        files.push(path_info);
+                    } else {
+                        // 处理 path 不是有效 UTF-8 的情况
+                        // eprintln!("Path is not valid UTF-8");
+                        continue;
+                    }
+
                 }
             }
         }
@@ -125,9 +141,23 @@ fn file_type_matches(path: &Path, types: &Vec<String>) -> bool {
     false
 }
 
+fn excluded_file_names_matches(path_name: &str, excluded_file_names: &Vec<String>) -> bool {
+    for excluded_name in excluded_file_names {
+        if path_name == excluded_name {
+            return true;
+        }
+    }
+    false
+}
+
 #[command]
-pub fn calculate_file_hash(file_path: String) -> String {
-    let file_bytes = fs::read(file_path).expect("Failed to read file");
+// 定义异步函数来计算文件的 SHA256 哈希
+pub async fn calculate_file_hash(file_path: String) -> String {
+    // 异步读取文件
+    let file_bytes = match async_std_fs::read(file_path).await {
+        Ok(bytes) => bytes,
+        Err(_) => return "Failed to read file".to_string(), // 如果读取失败，返回错误信息
+    };
 
     // 初始化 SHA256 哈希上下文
     let mut hasher = Sha256::new();
@@ -227,7 +257,7 @@ pub fn mv_file_to_trash(file_path: String) -> RequestMvFile {
 #[command]
 pub fn get_app_data_dir() -> String {
     std::env::var("MY_APP_DATA_DIR")
-    .unwrap_or_else(|_| "Environment variable for app data directory not set".to_string())
+        .unwrap_or_else(|_| "Environment variable for app data directory not set".to_string())
 }
 
 /* #[command]
@@ -254,17 +284,19 @@ fn open_finder(path: String) -> RequestMvFile {
 
 #[command]
 pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
-    println!("256 {}",file_path);
+    println!("256 {}", file_path);
     // 获取文件所在的目录
     #[cfg(target_os = "linux")]
     let path = std::path::Path::new(&file_path);
     #[cfg(target_os = "linux")]
     let parent_dir = match path.parent() {
         Some(dir) => dir.to_str().unwrap_or(""),
-        None => return RequestMvFile {
-            code: Some(500),
-            msg: Some("No parent directory found.".to_string()),
-            data: Some("No parent directory found.".to_string()),
+        None => {
+            return RequestMvFile {
+                code: Some(500),
+                msg: Some("No parent directory found.".to_string()),
+                data: Some("No parent directory found.".to_string()),
+            }
         }
     };
 
@@ -301,7 +333,6 @@ pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
     }
 }
 
-
 // 批量移动指定的多个文件到一个目标目录
 #[command]
 pub fn move_specific_files(file_paths: Vec<PathBuf>, dest_dir: &str) -> RequestMvFile {
@@ -317,22 +348,36 @@ pub fn move_specific_files(file_paths: Vec<PathBuf>, dest_dir: &str) -> RequestM
 
     // 遍历提供的文件路径列表
     for file_path in file_paths {
-        if file_path.is_file() {  // 确保路径是文件
-            let dest_file_path = destination.join(
-                file_path.file_name().unwrap_or_else(|| OsStr::new(""))
-            );
+        if file_path.is_file() {
+            // 确保路径是文件
+            let dest_file_path =
+                destination.join(file_path.file_name().unwrap_or_else(|| OsStr::new("")));
             if let Err(e) = fs::rename(&file_path, &dest_file_path) {
                 return RequestMvFile {
                     code: Some(500),
-                    msg: Some(format!("Failed to move file '{}': {}", file_path.display(), e)),
-                    data: Some(format!("Failed to move file '{}': {}", file_path.display(), e)),
+                    msg: Some(format!(
+                        "Failed to move file '{}': {}",
+                        file_path.display(),
+                        e
+                    )),
+                    data: Some(format!(
+                        "Failed to move file '{}': {}",
+                        file_path.display(),
+                        e
+                    )),
                 };
             }
         } else {
             return RequestMvFile {
                 code: Some(400),
-                msg: Some(format!("Provided path '{}' is not a file.", file_path.display())),
-                data: Some(format!("Provided path '{}' is not a file.", file_path.display())),
+                msg: Some(format!(
+                    "Provided path '{}' is not a file.",
+                    file_path.display()
+                )),
+                data: Some(format!(
+                    "Provided path '{}' is not a file.",
+                    file_path.display()
+                )),
             };
         }
     }

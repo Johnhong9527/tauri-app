@@ -35,6 +35,7 @@ export default function CalculateListPage() {
   let { fileId } = useParams();
   const [data, setData] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [tip, setTip] = useState<string>('');
   const [removeList, setRemoveList] = useState<string[]>([]);
   interface FileItem {
     sourceId: number;
@@ -45,9 +46,12 @@ export default function CalculateListPage() {
     otherItems: insertSearchFilesPasamsType[];
   }
   const appendData = async () => {
+    setLoading(true)
+    setTip('正在统计中');
     const [isError, searchDuplicateFileRes] = await searchDuplicateFile({
       sourceId: `${fileId}`,
     });
+    console.log(5151, isError)
     if (!isError) {
       typeof searchDuplicateFileRes === "string" &&
         (await tauriMessage(searchDuplicateFileRes, {
@@ -55,13 +59,31 @@ export default function CalculateListPage() {
           type: "error",
         }));
     }
-
+    /*count
+        :
+        2
+    hash
+        :
+        "fdd8051fcf884d8cc9a095cd77a58694e13b066aea68dc1fc353767ab0ebfe01"
+    ids
+        :
+        "25494,26393"
+    sourceId
+        :
+        6*/
+    setTip('');
+    setLoading(false);
+    setData(searchDuplicateFileRes as any);
+    console.log(63, searchDuplicateFileRes);
+    return
     if (Array.isArray(searchDuplicateFileRes)) {
+      let index = -1
       const newData: any[] = [];
       await searchDuplicateFileRes.reduce(
         async (prevPromise: any, currentFile: any) => {
           // 等待上一个 Promise 完成
           await prevPromise;
+          index++
           const ids = currentFile.ids.split(",");
           const firstItem = await get_fileInfo_by_id(ids[0], `${fileId}`);
           const otherItems = await Promise.allSettled(
@@ -88,12 +110,15 @@ export default function CalculateListPage() {
               })
               .filter((elm: any) => elm),
           });
+          setTip(`正在统计中: ${Math.floor((index / searchDuplicateFileRes.length) * 100)}% : ${searchDuplicateFileRes.length - index}`);
           return Promise.resolve(0);
         },
         Promise.resolve(0)
       );
       setData(newData);
     }
+    setLoading(false)
+    setTip('')
   };
 
   useEffect(() => {
@@ -226,10 +251,11 @@ export default function CalculateListPage() {
   }
   return (
     <div className={styles.CalculateListPage}>
-      <Spin spinning={loading}>
+      <Spin spinning={loading} tip={tip}>
         <div
           style={{
             padding: "24px",
+            minHeight: '50vh'
           }}
         >
           <Space>
@@ -248,7 +274,7 @@ export default function CalculateListPage() {
             value={removeList}
           >
             <div style={{ width: "100%" }}>
-              {data.map((item: FileItem) => (
+              {data.map((item: any) => (
                 <div
                   key={item.hash}
                   style={{
@@ -257,8 +283,9 @@ export default function CalculateListPage() {
                   }}
                 >
                   <div className={styles.CheckboxGroup}>
-                    <Checkbox value={item.firstItem.path}>
-                      {CheckboxContent(item.firstItem)}
+                    <Checkbox value={item.path}>
+                      {/*{CheckboxContent(item as any)}*/}
+                      {item.path}
                     </Checkbox>
                   </div>
                   <div
@@ -268,10 +295,18 @@ export default function CalculateListPage() {
                     }}
                     className={styles.CheckboxGroup}
                   >
-                    {item.otherItems.map((otherItem) => (
+                    {/*{item.otherItems.map((otherItem) => (
                       <div key={otherItem.path}>
                         <Checkbox value={otherItem.path}>
                           {CheckboxContent(otherItem)}
+                        </Checkbox>
+                      </div>
+                    ))}*/}
+                    {item.ids.split(',').map((id_name: string) => (
+                      <div key={id_name}>
+                        <Checkbox value={id_name}>
+                          {/*{CheckboxContent(id_name as any)}*/}
+                          {id_name}
                         </Checkbox>
                       </div>
                     ))}
@@ -280,7 +315,7 @@ export default function CalculateListPage() {
               ))}
             </div>
           </Checkbox.Group>
-          {!data.length && (
+          {!data.length && !loading && (
             <div
               style={{
                 padding: "48px 0",
