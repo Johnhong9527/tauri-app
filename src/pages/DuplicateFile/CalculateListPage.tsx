@@ -16,6 +16,8 @@ import {
   del_file_by_id,
   get_fileInfo_by_id,
   searchDuplicateFile,
+  setDuplicateFile,
+  getDuplicateFile
 } from "@/services";
 import {
   message as tauriMessage,
@@ -30,13 +32,18 @@ import type { GetProp } from "antd";
 import File from "@/plugins/tauri-plugin-file/file";
 import { CopyText } from "@/components/Table/CopyText";
 import { FolderOpenOutlined } from "@ant-design/icons";
+import VirtualList from 'rc-virtual-list';
+import dayjs from 'dayjs'
+import { formatFileSize } from '@/utils';
 
 export default function CalculateListPage() {
+  const ContainerHeight = 500;
   let { fileId } = useParams();
   const [data, setData] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [tip, setTip] = useState<string>('');
   const [removeList, setRemoveList] = useState<string[]>([]);
+  const [page, setPage] = useState(1)
   interface FileItem {
     sourceId: number;
     ids: string;
@@ -45,47 +52,20 @@ export default function CalculateListPage() {
     firstItem: insertSearchFilesPasamsType;
     otherItems: insertSearchFilesPasamsType[];
   }
-  const appendData = async () => {
-    setLoading(true)
-    setTip('正在统计中');
-    const [isError, searchDuplicateFileRes] = await searchDuplicateFile({
+
+  async function getFileList() {
+    setLoading(true);
+    setTip('加载数据中~')
+    const res = await getDuplicateFile({
       sourceId: `${fileId}`,
-    });
-    console.log(5151, isError)
-    if (!isError) {
-      typeof searchDuplicateFileRes === "string" &&
-        (await tauriMessage(searchDuplicateFileRes, {
-          title: "查询失败",
-          type: "error",
-        }));
-    }
-    /*count
-        :
-        2
-    hash
-        :
-        "fdd8051fcf884d8cc9a095cd77a58694e13b066aea68dc1fc353767ab0ebfe01"
-    ids
-        :
-        "25494,26393"
-    sourceId
-        :
-        6*/
-    setTip('');
-    setLoading(false);
-    setData(searchDuplicateFileRes as any);
-    console.log(63, searchDuplicateFileRes);
-    return
-    if (Array.isArray(searchDuplicateFileRes)) {
-      let index = -1
-      const newData: any[] = [];
-      await searchDuplicateFileRes.reduce(
+       page,
+      pageSize: 10
+    })
+    const newData: any[] = [];
+    if(Array.isArray(res.data)) {
+      await res.data.reduce(
         async (prevPromise: any, currentFile: any) => {
-          // 等待上一个 Promise 完成
-          await prevPromise;
-          index++
           const ids = currentFile.ids.split(",");
-          const firstItem = await get_fileInfo_by_id(ids[0], `${fileId}`);
           const otherItems = await Promise.allSettled(
             ids
               .map((id: string) => {
@@ -96,29 +76,86 @@ export default function CalculateListPage() {
               })
               .filter((elm: any) => elm)
           );
-
           newData.push({
             ...currentFile,
-            firstItem: firstItem[0],
             otherItems: otherItems
               .map((elm) => {
                 if (elm.status === "fulfilled" && !elm.value[1]) {
-                  setRemoveList([]);
                   return elm.value[0];
                 }
                 return false;
               })
               .filter((elm: any) => elm),
           });
+          return Promise.resolve(0)
+        }
+      ), Promise.resolve(0)
+      const allFilesHash = data.map(elm => elm.hash);
+      const noDuplicateData = newData.filter(elm => {
+        if(allFilesHash.indexOf(elm.hash) > -1) {
+          return false
+        }
+        return elm
+      })
+      setData([
+        ...data,
+        ...noDuplicateData
+      ]);
+      setTimeout(() => {
+        setLoading(false);
+        setTip('');
+      }, 300)
+    }
+  }
+  const appendData = async () => {
+    setLoading(true);
+    setRemoveList([]);
+    setTip('正在统计中');
+    const [isError, searchDuplicateFileRes] = await searchDuplicateFile({
+      sourceId: `${fileId}`,
+    });
+    if (!isError) {
+      typeof searchDuplicateFileRes === "string" &&
+        (await tauriMessage(searchDuplicateFileRes, {
+          title: "查询失败",
+          type: "error",
+        }));
+    }
+    /*
+      count: 2
+      hash: "fdd8051fcf884d8cc9a095cd77a58694e13b066aea68dc1fc353767ab0ebfe01"
+      ids: "25494,26393"
+      sourceId: 6
+    */
+    if (Array.isArray(searchDuplicateFileRes)) {
+      let index = -1
+      await searchDuplicateFileRes.reduce(
+        async (prevPromise: any, currentFile: any) => {
+          // 等待上一个 Promise 完成
+          await prevPromise;
+          index++
+          const ids = currentFile.ids.split(",");
+          const firstItem = await get_fileInfo_by_id(ids[0], `${fileId}`);
+          try {
+            // 写到本地的数据库中
+            await setDuplicateFile(`${fileId}`, {
+              ...firstItem[0],
+              ids: currentFile.ids
+            })
+          } catch (err) {
+            console.log(109, err);
+          }
           setTip(`正在统计中: ${Math.floor((index / searchDuplicateFileRes.length) * 100)}% : ${searchDuplicateFileRes.length - index}`);
           return Promise.resolve(0);
         },
         Promise.resolve(0)
       );
-      setData(newData);
+      // 执行可分页的接口数据请求
+      await getFileList();
+    } else {
+      setLoading(false)
+      setTip('')
     }
-    setLoading(false)
-    setTip('')
   };
 
   useEffect(() => {
@@ -156,20 +193,18 @@ export default function CalculateListPage() {
         ></CopyText>
       </div>
       <div className={styles.modified_time}>
-        {/* <CopyText
-          width="100px"
+        <CopyText
+          width="150px"
           color="#333"
-          name={item.modified_time || ""}
-        ></CopyText> */}
-        {item.modified_time}
+          name={item.modified_time ? dayjs.unix(item.modified_time).format('YYYY-MM-DD HH:mm:ss') : ""}
+        ></CopyText>
       </div>
       <div className={styles.modified_time}>
-        {/* <CopyText
+        <CopyText
           width="100px"
           color="#333"
-          name={item.file_size || ""}
-        ></CopyText> */}
-        {item.file_size}
+          name={item.file_size ? formatFileSize(item.file_size) : ''}
+        ></CopyText>
       </div>
     </div>
   );
@@ -235,7 +270,7 @@ export default function CalculateListPage() {
       multiple: false,
       defaultPath: await homeDir(),
     });
-    console.log(213, selected);
+
     await File.moveSpecificFiles(['/Users/honghaitao/Downloads/Xnip2023-05-31_21-39-11_副本.png'], `${selected}`)
     return;
     // dialogSave
@@ -247,7 +282,14 @@ export default function CalculateListPage() {
         },
       ],
     });
-    console.log(186, filePath);
+  }
+  useEffect(() => {
+    if(data.length) {
+      getFileList();  
+    }
+  }, [page])
+  function getNext() {
+    setPage(page + 1);
   }
   return (
     <div className={styles.CalculateListPage}>
@@ -274,47 +316,53 @@ export default function CalculateListPage() {
             value={removeList}
           >
             <div style={{ width: "100%" }}>
-              {data.map((item: any) => (
-                <div
-                  key={item.hash}
-                  style={{
-                    backgroundColor: "var(--color-2)",
-                    marginBottom: "24px",
-                  }}
+              <List>
+                <VirtualList
+                    data={data}
+                    itemKey="hash"
                 >
-                  <div className={styles.CheckboxGroup}>
-                    <Checkbox value={item.path}>
-                      {/*{CheckboxContent(item as any)}*/}
-                      {item.path}
-                    </Checkbox>
-                  </div>
-                  <div
-                    style={{
-                      border: "1px solid var(--color-1)",
-                      padding: "12px 3px",
-                    }}
-                    className={styles.CheckboxGroup}
-                  >
-                    {/*{item.otherItems.map((otherItem) => (
-                      <div key={otherItem.path}>
-                        <Checkbox value={otherItem.path}>
-                          {CheckboxContent(otherItem)}
-                        </Checkbox>
+                {/*height={ContainerHeight}*/}
+                  {(item: any) => (
+                    <List.Item key={item.hash}>
+                      <div
+                        key={item.hash}
+                        style={{
+                          backgroundColor: "var(--color-2)",
+                          marginBottom: "24px",
+                          width: '100%'
+                        }}
+                      >
+                        <div className={styles.CheckboxGroup}>
+                          <Checkbox value={item.path}>
+                            {CheckboxContent(item as any)}
+                            {/*item.path*/}
+                          </Checkbox>
+                        </div>
+                        <div
+                          style={{
+                            border: "1px solid var(--color-1)",
+                            padding: "12px 3px",
+                          }}
+                          className={styles.CheckboxGroup}
+                        >
+                          {item.otherItems.map((otherItem) => (
+                            <div key={otherItem.path}>
+                              <Checkbox value={otherItem.path}>
+                                {CheckboxContent(otherItem)}
+                              </Checkbox>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}*/}
-                    {item.ids.split(',').map((id_name: string) => (
-                      <div key={id_name}>
-                        <Checkbox value={id_name}>
-                          {/*{CheckboxContent(id_name as any)}*/}
-                          {id_name}
-                        </Checkbox>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                    </List.Item>
+                  )}
+                </VirtualList>
+              </List>
             </div>
           </Checkbox.Group>
+          <Button type="primary" onClick={() => getNext()}>
+            加载更多
+          </Button>
           {!data.length && !loading && (
             <div
               style={{

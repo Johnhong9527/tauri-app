@@ -26,5 +26,20 @@ export const createSql = {
         hash TEXT,
         db_version TEXT,
         UNIQUE (path)
+    );`,
+    duplicate_files: `CREATE TABLE IF NOT EXISTS duplicate_files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        create_time TIMESTAMP,
+        creation_time TIMESTAMP,
+        modified_time TIMESTAMP,
+        file_size INTEGER,
+        sourceId INTEGER,
+        type TEXT,
+        name TEXT,
+        path TEXT,
+        hash TEXT,
+        db_version TEXT,
+        ids  TEXT,
+        UNIQUE (hash)
     );`
 }

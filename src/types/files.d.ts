@@ -35,6 +35,7 @@ export type insertSearchFilesPasamsType = {
   file_size: string,
   creation_time?: string,
   modified_time?: string,
+  ids?: string,
 };
 
 export type historyListType = {

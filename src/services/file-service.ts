@@ -340,32 +340,28 @@ export async function searchDuplicateFile({
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    /*
-    select * from search_files where sourceId = $1 in (select sourceId from search_files group by hash having count(hash) > 1)
- */
-    // const res = await DB.select("SELECT * from search_files WHERE sourceId = $1", [sourceId]);
     const res: DuplicateFileInfo[] = await DB.select(
-      `SELECT hash,
-       sourceId,
-       id,
-       creation_time,
-       modified_time,
-       file_size,
-       type,
-       name,
-       path,
-       GROUP_CONCAT(id)    AS ids,
-       COUNT(*)           AS count
-FROM search_files
-WHERE sourceId = $1
-  AND hash IS NOT NULL  
-  AND hash != "''"
-  AND hash != ""
-GROUP BY hash, sourceId
-HAVING COUNT(*) > 1
+      `SELECT
+    s.hash,
+    s.sourceId,
+    s.id,
+    s.creation_time,
+    s.modified_time,
+    s.file_size,
+    s.type,
+    s.name,
+    s.path,
+    GROUP_CONCAT(s.id) AS ids,
+    COUNT(*) AS count
+FROM search_files s
+LEFT JOIN duplicate_files d ON s.hash = d.hash
+WHERE s.sourceId = $1
+  AND s.hash IS NOT NULL
+  AND s.hash != ''
+  AND d.hash IS NULL
+GROUP BY s.hash, s.sourceId
+HAVING COUNT(*) > 1;
 `,
-/* ORDER BY [creation_time] ASC
-LIMIT $3 OFFSET ($2 - 1) * $3; */
       [sourceId, page, pageSize]
     );
     return Promise.resolve([true, res]);
@@ -517,3 +513,98 @@ LIMIT 1;`,
     return Promise.resolve([false, error]);
   }
 }
+
+/**
+ * 重复文件数据
+ * */
+export async function setDuplicateFile(sourceId: string, {
+  path,
+  type,
+  name,
+  hash,
+  creation_time,
+  modified_time,
+  file_size,
+  ids
+}: insertSearchFilesPasamsType) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.duplicate_files);
+    await DB.execute(
+      `
+        INSERT into duplicate_files 
+          (create_time, sourceId, name, type, path, hash, creation_time, modified_time, file_size, db_version, ids) 
+        VALUES 
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `,
+      [
+        new Date().getTime(),
+        sourceId,
+        name,
+        type,
+        path,
+        hash,
+        creation_time,
+        modified_time,
+        file_size,
+        "1",
+        ids
+      ]
+    );
+    return Promise.resolve([true, ""]);
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return Promise.resolve([false, error]);
+  }
+}
+/**
+ * 按照分页数据请求重复文件列表内容
+ * @param page 当前请求的页码，代表用户想要访问的数据页。
+ * @param pageSize 每页展示的记录数量，决定了每次查询返回的数据条数。
+ * @returns 返回一个对象，其中包含两个属性：
+ *          - data: FileInfoType[] - 当前页的记录数据数组。
+ *          - total: number - 表中的总记录数，用于前端计算总页数。
+ * */
+export async function getDuplicateFile(
+  {
+    page,
+    pageSize,
+    sourceId
+  }: 
+  {
+    page: number,
+    pageSize: number,
+    sourceId: string
+  }
+): Promise<{
+  [x: string]: any;
+  data: insertSearchFilesPasamsType[];
+  total: number;
+}>  {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.duplicate_files);
+    // 查询总记录数
+    const totalResult = await DB.select(
+      "SELECT COUNT(*) AS total FROM duplicate_files"
+    );
+    const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
+    // 计算分页偏移量
+    const offset = (page || 1 - 1) * (pageSize || 10);
+    // 获取当前页的数据
+    const data = await DB.select(
+      "SELECT * FROM duplicate_files LIMIT ? OFFSET ?",
+      [pageSize, offset]
+    );
+    return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
+  } catch (error) {
+    return { data: [], total: 0 };
+  }
+}
+
+
+
