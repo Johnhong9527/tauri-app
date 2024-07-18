@@ -50,7 +50,6 @@ export async function insertSeletedFileHistory(
     );
     return false;
   } catch (err) {
-    console.log(5454, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前路径重复";
     }
@@ -82,7 +81,6 @@ export async function updateSelectedFileHistory(
     );
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -109,7 +107,6 @@ export async function updateSelectedFileHistoryFiles(
     );
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -215,7 +212,6 @@ export async function insertSearchFiles({
     );
     return Promise.resolve([true, ""]);
   } catch (err) {
-    // console.log(145, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return Promise.resolve([false, "当前路径重复"]);
     }
@@ -249,7 +245,6 @@ export async function get_all_history(
   const totalResult = await DB.select(
     "SELECT COUNT(*) AS total FROM select_history"
   );
-  console.log(128, totalResult);
   // [Log] 128 – {lastInsertId: 0, rowsAffected: 0} (file-service.ts, line 51)
   const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
   // 计算分页偏移量
@@ -260,7 +255,6 @@ export async function get_all_history(
     "SELECT * FROM select_history LIMIT ? OFFSET ?",
     [pageSize, offset]
   );
-  console.log(138, data, pageSize, offset);
   DB.close();
   return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
 }
@@ -276,8 +270,6 @@ export async function get_list_by_sourceid(
       "SELECT * FROM search_files WHERE sourceId = $1 AND (hash = '' OR hash IS NULL)",
       [sourceId]
     );
-    console.log(969696, sourceId);
-    console.log(3434, res);
 
     if (Array.isArray(res)) {
       return [res, ""];
@@ -300,10 +292,8 @@ export async function delSelectedFileHistory(path?: string) {
         path, // 假设 path 变量是预定义的
       ]
     );
-    console.log(206, result);
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -366,7 +356,6 @@ HAVING COUNT(*) > 1;
     );
     return Promise.resolve([true, res]);
   } catch (err) {
-    // console.log(145, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return Promise.resolve([false, "当前路径重复"]);
     }
@@ -414,7 +403,6 @@ export async function updateFileHsah(
     );
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -478,7 +466,6 @@ export async function del_file_by_id(path: string, sourceId: string) {
     );
     return Promise.resolve(false);
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -646,8 +633,6 @@ async function fetchData() {
   // 调用函数获取数据
   try {
     const result = await getDuplicateFiles({ page, pageSize, searchParams });
-    console.log('Fetched Data:', result.data);
-    console.log('Total Records:', result.total);
   } catch (error) {
     console.error('Error fetching duplicate files:', error);
   }
@@ -707,7 +692,7 @@ export async function getDuplicateFiles_v2({
     });
 
     // 计算分页偏移量
-    const offset = (page - 1) * pageSize;
+    const offset = page * pageSize;
 
     // 动态构建排序条件
     const orderByClauses = searchParams.sorters.map(sorter => `${sorter.column} ${sorter.order}`).join(', ');

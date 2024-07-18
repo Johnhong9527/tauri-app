@@ -49,8 +49,7 @@ export default function CalculateListPage() {
   const [total, setTotal] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [userSelectedRowKeys, setUserSelectedRowKeys] = useState<string[]>([]);
-  const [tableKey, setTableKey] = useState('123456')
-  const [sorterOrder, setSorterOrder] = useState('')
+  const [sorterOrder, setSorterOrder] = useState('');
   const [sorterColumnKey, setSorterColumnKey] = useState({})
   interface FileItem {
     sourceId: number;
@@ -65,77 +64,64 @@ export default function CalculateListPage() {
   async function getFileList() {
     setLoading(true);
     setTip('加载数据中~');
-    const sorters = [];
-    Object.keys(sorterColumnKey).forEach(key => {
-      sorters.push({
-        column: key,
-        order: sorterColumnKey[key]
-      })
-    })
-    const res = await getDuplicateFiles_v2({
-      searchParams: {
-        sourceId: `${fileId}`,
-        keywords: {},
-        sorters: sorters
-      },
-      page,
-      pageSize
-    })
-    console.log(69696969, sorterColumnKey);
-    const newData: any[] = [];
-    const allids = []
-    setTotal(res.total)
-    if(Array.isArray(res.data) && res.data.length) {
-      await res.data.reduce(
-        async (prevPromise: any, currentFile: any) => {
-          const ids = currentFile.ids.split(",");
-          const otherItems = await Promise.allSettled(
-            ids
-              .map((id: string) => {
-                if (id === ids[0]) {
-                  return false;
-                }
-                return get_fileInfo_by_id(id, `${fileId}`);
-              })
-              .filter((elm: any) => elm)
-          );
-          const children = otherItems
-            .map((elm) => {
-              if (elm.status === "fulfilled" && !elm.value[1]) {
-                allids.push(`${ids[0]}_${elm.value[0].id}`)
-                return {
-                  id: `${ids[0]}_${elm.value[0].id}`,
-                  key: `${ids[0]}_${elm.value[0].id}`,
-                  ...elm.value[0]
-                };
-              }
-              return false;
-            })
-            .filter((elm: any) => elm)
-          allids.push(ids[0]);
-          newData.push({
-            ...currentFile,
-            id: ids[0],
-            key: ids[0],
-            children: children,
-            otherItems: children,
-          });
-          return Promise.resolve(0)
-        }
-      ), Promise.resolve(0)
-      setData(newData);
-      setTableKey(`${new Date().getTime()}`);
-      setTimeout(() => {
+
+    try {
+        const sorters = Object.keys(sorterColumnKey).map(key => ({
+            column: key,
+            order: sorterColumnKey[key]
+        }));
+
+        const res = await getDuplicateFiles_v2({
+            searchParams: {
+                sourceId: `${fileId}`,
+                keywords: {},
+                sorters: sorters
+            },
+            page: page - 1,
+            pageSize
+        });
+
+        setTotal(res.total);
+
+        const newData = await processFiles(res.data, fileId);
+
+        setTimeout(() => {
+            setData(newData);
+            setLoading(false);
+            setTip('');
+        }, 300);
+    } catch (error) {
+        console.error('Error loading file list:', error);
+        setData([]);
         setLoading(false);
         setTip('');
-      }, 300)
-    } else {
-      setData([]);
-      setTableKey(`${new Date().getTime()}`);
-      setLoading(false);
-      setTip('');
     }
-  }
+}
+
+async function processFiles(data, fileId) {
+    if (!Array.isArray(data) || !data.length) {
+        return [];
+    }
+    const results = [];
+    for (const file of data) {
+        const otherItems = await Promise.allSettled(
+            file.ids.split(",").map(id => get_fileInfo_by_id(id, fileId))
+        );
+        results.push({
+            ...file,
+            key: file.id,
+            children: otherItems
+            .filter(result => result.status === "fulfilled" && !result.value[1])
+            .map(result => ({
+                id: `${file.id}_${result.value[0].id}`,
+                key: `${file.id}_${result.value[0].id}`,
+                ...result.value[0]
+            }))
+        });
+    }
+    return results;
+}
+
   const appendData = async () => {
     setLoading(true);
     setRemoveList([]);
@@ -279,6 +265,7 @@ export default function CalculateListPage() {
   }
 
   useEffect(() => {
+    console.log(281, page, pageSize, sorterColumnKey, sorterOrder);
     getFileList();
   }, [page, pageSize, sorterColumnKey, sorterOrder])
 
@@ -287,13 +274,19 @@ export default function CalculateListPage() {
       title: '文件名称',
       dataIndex: 'name',
       key: 'name',
+      fixed: 'left',
       render: (text: string, record: { name?: string, path?: string }) => (
         <Row>
           <Col span={2}>
             <FolderOpenOutlined onClick={() => openFileShowInExplorer('/Users/sysadmin/Library/Application Support/com.hht.com/files_3.db')} />
           </Col>
           <Col span={22}>
-            {record.name}
+            <CopyText
+            width="300px"
+            ellipsisLine={1}
+            color="#333"
+            name={record.name || ""}
+          ></CopyText>
           </Col>
         </Row>
       )
@@ -303,16 +296,13 @@ export default function CalculateListPage() {
       dataIndex: 'path',
       key: 'path',
       render: (text: string, record: { path?: string }) => (
-        <Row>
-          
-          <CopyText
-            width="300px"
-            ellipsisLine={1}
-            color="#333"
-            name={record.path || ""}
-          ></CopyText>
-        </Row>
-        ),
+        <CopyText
+          width="300px"
+          ellipsisLine={1}
+          color="#333"
+          name={record.path || ""}
+        ></CopyText>
+      ),
     },
     {
       title: '文件大小',
@@ -320,26 +310,55 @@ export default function CalculateListPage() {
       key: 'file_size',
       sorter: true,
       render: (text: string, record: { file_size?: string }) => (
-          <CopyText
-            width="150px"
-            ellipsisLine={1}
-            color="#333"
-            name={formatFileSize(record.file_size)}
-          ></CopyText>
-        ),
+        <CopyText
+          width="150px"
+          ellipsisLine={1}
+          color="#333"
+          name={formatFileSize(record.file_size)}
+        ></CopyText>
+      ),
+    },
+    {
+      title: '生成时间',
+      dataIndex: 'create_time',
+      key: 'create_time',
+      sorter: true,
+      render: (text: string, record: { create_time?: string }) => (
+        <CopyText
+          width="160px"
+          ellipsisLine={1}
+          color="#333"
+          name={dayjs.unix(record.create_time / 1000).format('YYYY-MM-DD HH:mm:ss') }
+        ></CopyText>
+      ),
+    },
+      {
+      title: '创建时间',
+      dataIndex: 'creation_time',
+      key: 'creation_time',
+      sorter: true,
+      render: (text: string, record: { creation_time?: string }) => (
+        <CopyText
+          width="160px"
+          ellipsisLine={1}
+          color="#333"
+          name={dayjs.unix(record.creation_time).format('YYYY-MM-DD HH:mm:ss') }
+        ></CopyText>
+      ),
     },
     {
       title: '修改时间',
       dataIndex: 'modified_time',
       key: 'modified_time',
+      sorter: true,
       render: (text: string, record: { modified_time?: string }) => (
-          <CopyText
-            width="160px"
-            ellipsisLine={1}
-            color="#333"
-            name={dayjs.unix(record.modified_time).format('YYYY-MM-DD HH:mm:ss') }
-          ></CopyText>
-        ),
+        <CopyText
+          width="160px"
+          ellipsisLine={1}
+          color="#333"
+          name={dayjs.unix(record.modified_time).format('YYYY-MM-DD HH:mm:ss') }
+        ></CopyText>
+      ),
     },
   ];
 
@@ -382,7 +401,7 @@ export default function CalculateListPage() {
       setPage(1);
       if(sorter.order) {
         setSorterColumnKey({
-          ...sorterColumnKey,
+          // ...sorterColumnKey,
           [sorter.columnKey]: sorter.order === 'ascend' ? 'ASC' : 'DESC'
         })
       } else {
@@ -407,6 +426,10 @@ export default function CalculateListPage() {
         <Button type="primary">导出</Button>
       </Space>
       <Table
+        style={{
+          width: 'calc(100% - 48px)',
+
+        }}
         columns={columns}
         loading={loading}
         pagination={{
@@ -417,7 +440,12 @@ export default function CalculateListPage() {
         }}
         rowSelection={{ ...rowSelection}}
         expandable={{
-          defaultExpandAllRows: false
+          defaultExpandAllRows: false,
+
+        }}
+        scroll={{
+          scrollToFirstRowOnChange: true,
+           x: true
         }}
         dataIndex="id"
         dataSource={data}
