@@ -1,20 +1,30 @@
 import {
-  Avatar,
-  List,
   message,
-  Checkbox,
   Row,
   Col,
   Space,
   Button,
-  Spin,
   Empty,
   Table,
   Input,
   InputRef,
 } from "antd";
 import React, { useEffect, useState, useRef } from "react";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, FolderOpenOutlined } from "@ant-design/icons";
+import {
+  message as tauriMessage,
+  save as dialogSave,
+  open as dialogopen,
+} from "@tauri-apps/api/dialog";
+import { insertSearchFilesPasamsType } from "@/types/files";
+import dayjs from "dayjs";
+import { useParams } from "react-router";
+import { useLocation } from "react-router-dom";
+import { homeDir } from "@tauri-apps/api/path";
+import File from "@/plugins/tauri-plugin-file/file";
+import { CopyText } from "@/components/Table/CopyText";
+import { formatFileSize } from "@/utils";
+import styles from "./CalculateListPage.module.less";
 import {
   del_file_by_id,
   get_fileInfo_by_id,
@@ -22,21 +32,6 @@ import {
   setDuplicateFile,
   getDuplicateFiles_v2,
 } from "@/services";
-import {
-  message as tauriMessage,
-  save as dialogSave,
-  open as dialogopen,
-} from "@tauri-apps/api/dialog";
-import { homeDir } from "@tauri-apps/api/path";
-import styles from "./CalculateListPage.module.less";
-import { useParams } from "react-router";
-import { insertSearchFilesPasamsType } from "@/types/files";
-import File from "@/plugins/tauri-plugin-file/file";
-import { CopyText } from "@/components/Table/CopyText";
-import { FolderOpenOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-import { formatFileSize } from "@/utils";
-import { useLocation } from "react-router-dom";
 
 type KeywordsType<T> = {
   [key: string]: T;
