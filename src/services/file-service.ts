@@ -663,12 +663,14 @@ interface FetchParams {
   page: number;
   pageSize: number;
   searchParams: SearchParam;
+  table_name?: "select_history" | "search_files" | "duplicate_files";
 }
 
 export async function getDuplicateFiles_v2({
   page,
   pageSize,
   searchParams,
+  table_name = "duplicate_files",
 }: FetchParams): Promise<{
   data: FileInfoType[];
   total: number;
@@ -676,10 +678,10 @@ export async function getDuplicateFiles_v2({
   try {
     const DB = await Database.load(`sqlite:files_${searchParams.sourceId}.db`);
     // 创建表
-    await DB.execute(createSql.duplicate_files);
+    await DB.execute(createSql[table_name]);
     // 动态构建查询条件
-    const conditions = [];
-    const params = [];
+    const conditions: string[] = [];
+    const params: unknown[] | undefined = [];
     // 处理多字段搜索
     Object.keys(searchParams.keywords).forEach((field) => {
       if (searchParams.keywords[field]) {
@@ -694,11 +696,11 @@ export async function getDuplicateFiles_v2({
       .join(", ");
     const orderBy = orderByClauses ? `ORDER BY ${orderByClauses}` : "";
     // 查询总记录数（考虑搜索条件）
-    const totalQuery = `SELECT COUNT(*) AS total FROM duplicate_files ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}`;
+    const totalQuery = `SELECT COUNT(*) AS total FROM ${table_name} ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}`;
     const totalResult = await DB.select(totalQuery, params);
     const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
     // 获取当前页的数据
-    const dataQuery = `SELECT * FROM duplicate_files ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""} ${orderBy} LIMIT ? OFFSET ?`;
+    const dataQuery = `SELECT * FROM ${table_name} ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""} ${orderBy} LIMIT ? OFFSET ?`;
     params.push(pageSize, offset);
     const data = await DB.select(dataQuery, params);
     return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象

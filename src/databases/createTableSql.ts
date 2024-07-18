@@ -1,5 +1,5 @@
 export const createSql = {
-    select_history: `CREATE TABLE IF NOT EXISTS select_history (
+  select_history: `CREATE TABLE IF NOT EXISTS select_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         time TIMESTAMP,
         name TEXT CHECK(length(name) <= 255),
@@ -13,7 +13,7 @@ export const createSql = {
         files INTEGER,
         UNIQUE (path)
     );`,
-    search_files: `CREATE TABLE IF NOT EXISTS search_files (
+  search_files: `CREATE TABLE IF NOT EXISTS search_files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         create_time TIMESTAMP,
         creation_time TIMESTAMP,
@@ -27,7 +27,7 @@ export const createSql = {
         db_version TEXT,
         UNIQUE (path)
     );`,
-    duplicate_files: `CREATE TABLE IF NOT EXISTS duplicate_files (
+  duplicate_files: `CREATE TABLE IF NOT EXISTS duplicate_files (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         create_time TIMESTAMP,
         creation_time TIMESTAMP,
@@ -41,5 +41,5 @@ export const createSql = {
         db_version TEXT,
         ids  TEXT,
         UNIQUE (hash)
-    );`
-}
+    );`,
+};
