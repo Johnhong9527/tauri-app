@@ -682,32 +682,25 @@ export async function getDuplicateFiles_v2({
     // 动态构建查询条件
     const conditions = [];
     const params = [];
-
     // 处理多字段搜索
     Object.keys(searchParams.keywords).forEach(field => {
       if (searchParams.keywords[field]) {
-        conditions.push(`${field} LIKE ?`);
-        params.push(`%${searchParams.keywords[field]}%`);
+        conditions.push(`${field} LIKE '%${searchParams.keywords[field]}%' `);
       }
     });
-
     // 计算分页偏移量
     const offset = page * pageSize;
-
     // 动态构建排序条件
     const orderByClauses = searchParams.sorters.map(sorter => `${sorter.column} ${sorter.order}`).join(', ');
     const orderBy = orderByClauses ? `ORDER BY ${orderByClauses}` : '';
-
     // 查询总记录数（考虑搜索条件）
     const totalQuery = `SELECT COUNT(*) AS total FROM duplicate_files ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}`;
     const totalResult = await DB.select(totalQuery, params);
     const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
-
     // 获取当前页的数据
     const dataQuery = `SELECT * FROM duplicate_files ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''} ${orderBy} LIMIT ? OFFSET ?`;
     params.push(pageSize, offset);
     const data = await DB.select(dataQuery, params);
-
     return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
   } catch (error) {
     console.error('Error fetching data:', error);

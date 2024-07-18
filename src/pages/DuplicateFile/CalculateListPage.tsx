@@ -10,9 +10,11 @@ import {
   Spin,
   Empty,
   Table,
+  Input,
 } from "antd";
 import type { CheckboxProps } from "antd";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { SearchOutlined } from '@ant-design/icons';
 import {
   del_file_by_id,
   get_fileInfo_by_id,
@@ -41,6 +43,7 @@ import { formatFileSize } from '@/utils';
 export default function CalculateListPage() {
   const ContainerHeight = 500;
   let { fileId } = useParams();
+  const searchInput = useRef<InputRef>(null);
   const [data, setData] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [tip, setTip] = useState<string>('');
@@ -49,8 +52,9 @@ export default function CalculateListPage() {
   const [total, setTotal] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [userSelectedRowKeys, setUserSelectedRowKeys] = useState<string[]>([]);
-  const [sorterOrder, setSorterOrder] = useState('');
-  const [sorterColumnKey, setSorterColumnKey] = useState({})
+  const [sorterOrder, setSorterOrder] = useState({});
+  const [sorterColumnKey, setSorterColumnKey] = useState({});
+  const [searchText, setSearchText] = useState('');
   interface FileItem {
     sourceId: number;
     ids: string;
@@ -70,11 +74,20 @@ export default function CalculateListPage() {
             column: key,
             order: sorterColumnKey[key]
         }));
+        const keywords = {}
+
+        if(searchText) {
+          Object.keys(searchText).forEach(key => {
+            if(searchText[key]) {
+              keywords[key] = searchText[key];
+            }
+          })
+        }
 
         const res = await getDuplicateFiles_v2({
             searchParams: {
                 sourceId: `${fileId}`,
-                keywords: {},
+                keywords: keywords,
                 sorters: sorters
             },
             page: page - 1,
@@ -265,9 +278,60 @@ async function processFiles(data, fileId) {
   }
 
   useEffect(() => {
-    console.log(281, page, pageSize, sorterColumnKey, sorterOrder);
     getFileList();
   }, [page, pageSize, sorterColumnKey, sorterOrder])
+
+
+  const handleSearchReset = (dataIndex: DataIndex) => {
+    setTotal(0);
+    setPage(1);
+    setSearchText({
+       ...searchText,
+      [dataIndex]: ''
+    });
+    setSorterColumnKey({})
+    getFileList()
+  }
+  const handleSearch = (dataIndex: DataIndex, value: string) => {
+     setSearchText({
+      ...searchText,
+      [dataIndex]: value
+    })
+  }
+
+
+ const getColumnSearchProps = (dataIndex: DataIndex, dataIndexName: string): ColumnType<DataType> => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+         <Input
+          ref={searchInput}
+          placeholder={`搜索${dataIndexName}`}
+          value={searchText[dataIndex]}
+          onChange={(e) => handleSearch(dataIndex, e.target.value)}
+          onPressEnter={() => getFileList()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+           <Button
+            type="primary"
+            icon={<SearchOutlined />}
+            size="small"
+            onClick={() => getFileList()}
+            style={{ width: 90 }}
+          >
+            搜索
+          </Button>
+           <Button
+            size="small"
+            onClick={() => handleSearchReset(dataIndex)}
+            style={{ width: 90 }}
+          >
+            重置
+          </Button>
+        </Space>
+      </div>
+    )
+ })
 
   const columns: ColumnsType<DataType> = [
     {
@@ -289,7 +353,8 @@ async function processFiles(data, fileId) {
           ></CopyText>
           </Col>
         </Row>
-      )
+      ),
+      ...getColumnSearchProps('name', '文件名称')
     },
     {
       title: '文件路径',
@@ -303,6 +368,7 @@ async function processFiles(data, fileId) {
           name={record.path || ""}
         ></CopyText>
       ),
+      ...getColumnSearchProps('path', '文件路径')
     },
     {
       title: '文件大小',
