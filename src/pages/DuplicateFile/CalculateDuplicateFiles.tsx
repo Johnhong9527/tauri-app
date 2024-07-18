@@ -1,10 +1,11 @@
 import {
-  get_info_by_id, getFirstEmptyHashBySourceId,
+  get_info_by_id,
+  getFirstEmptyHashBySourceId,
   insertSearchFiles,
   updateSelectedFileHistoryFiles,
 } from "@/services";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useLocation  } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   backFileInfoType,
   FileInfoType,
@@ -30,7 +31,7 @@ export default function CalculateDuplicateFiles() {
   const [fileInfo, setFileInfo] = useState<FileInfoType>({});
   const [current, setCurrent] = useState(1);
   const [percent, setPercent] = useState(85);
-  const [duplicateFilesStep, setDuplicateFilesStep] = useState('');
+  const [duplicateFilesStep, setDuplicateFilesStep] = useState("");
   const [stepsStatus, setStepsStatus] = useState<stepsStatusType>({
     // 'wait' | 'process' | 'finish' | 'error';
     scanDir: "wait",
@@ -41,7 +42,7 @@ export default function CalculateDuplicateFiles() {
   const [isCancelled, setIsCancelled] = useState(false); // 离开页面时终止正在执行的逻辑
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => {
-    pageInit().then(r => console.log(r));
+    pageInit().then((r) => console.log(r));
   }, []);
 
   useEffect(() => {
@@ -54,13 +55,13 @@ export default function CalculateDuplicateFiles() {
     setTimeout(() => {
       // 设置一个状态标志，表示组件已经挂载
       setHasMounted(true);
-    }, 300)
+    }, 300);
     // 如果你需要在组件卸载时进行清理，可以在这里返回一个函数
     // 当组件加载时，不做特殊操作
     // 只在组件卸载时设置isCancelled为true
     return () => {
-      if(hasMounted) {
-        console.log(47, ' 当组件卸载时，设置isCancelled为true');
+      if (hasMounted) {
+        console.log(47, " 当组件卸载时，设置isCancelled为true");
         setIsCancelled(true);
       }
     };
@@ -93,6 +94,7 @@ export default function CalculateDuplicateFiles() {
       });
     }
   }
+
   async function scanDirAll() {
     if (fileInfo.path) {
       // 扫描目录文件
@@ -110,8 +112,8 @@ export default function CalculateDuplicateFiles() {
         await computeFileChecksums_2();
       } catch (error) {
         console.log(107, error);
-        if(error == '提前终止') {
-          return
+        if (error == "提前终止") {
+          return;
         }
       }
       console.log("计算每一个文件的hash 结束");
@@ -167,18 +169,18 @@ export default function CalculateDuplicateFiles() {
   }
 
   /*
-  * 处理获取到的文件属性
-  * */
+   * 处理获取到的文件属性
+   * */
   async function computeFileMetadata_v2(files: backFileInfoType[]) {
     const [progressRes] = await get_progress_by_sourceId(`${fileId}`);
-    if(!files.length || !progressRes.total_entries) {
+    if (!files.length || !progressRes.total_entries) {
       setStepsStatus({
         ...stepsStatus,
         scanDir: "finish",
         fileOptions: "finish",
       });
       setPercent(100);
-      return Promise.resolve(0)
+      return Promise.resolve(0);
     }
     // 更新当前查询目录的总文件数目
     await updateSelectedFileHistoryFiles(`${fileInfo.path}`, files.length);
@@ -190,27 +192,24 @@ export default function CalculateDuplicateFiles() {
     setPercent(0);
     let fileIndex = -1;
     let allFilesLength = files.length;
-    await files.reduce(
-        async (prevPromise: any, currentFile: any) => {
-          // 等待上一个 Promise 完成
-          await prevPromise;
-          fileIndex++;
-          const file_info = files[fileIndex]
-          setPercent(Math.floor((fileIndex / allFilesLength) * 100));
-          return insertSearchFiles({
-            // 组装数据
-            sourceId: `${fileId}`,
-            path: `${file_info.file_path}`,
-            name: file_info.file_name,
-            creation_time: file_info.creation_time,
-            modified_time: file_info.modified_time,
-            file_size: file_info.file_size,
-            type: file_info.file_type,
-            hash: "",
-          });
-        },
-        Promise.resolve(0)
-    );
+    await files.reduce(async (prevPromise: any, currentFile: any) => {
+      // 等待上一个 Promise 完成
+      await prevPromise;
+      fileIndex++;
+      const file_info = files[fileIndex];
+      setPercent(Math.floor((fileIndex / allFilesLength) * 100));
+      return insertSearchFiles({
+        // 组装数据
+        sourceId: `${fileId}`,
+        path: `${file_info.file_path}`,
+        name: file_info.file_name,
+        creation_time: file_info.creation_time,
+        modified_time: file_info.modified_time,
+        file_size: file_info.file_size,
+        type: file_info.file_type,
+        hash: "",
+      });
+    }, Promise.resolve(0));
     setPercent(100);
     return waittime(300);
   }
@@ -232,37 +231,39 @@ export default function CalculateDuplicateFiles() {
         duplicateFiles: "process",
       });
       setPercent(0);
-      await allList
-        .reduce(
-          async (
-            prevPromise: any,
-            index: number
-          ) => {
-            // 等待上一个 Promise 完成
-            await prevPromise;
-            if (isCancelled || window.location.href.indexOf(location.pathname) < 0) {
-              // @ts-ignore
-              throw '提前终止'
-              return Promise.resolve(0);
-            } // 如果设置了取消标志，则提前终止
-            const [fileinfo, error] = await getFirstEmptyHashBySourceId(`${fileId}`);
-            if(fileinfo) {
-              // 获取文件类型和哈希
-              const hash = await File.getHash(fileinfo.path);
-              await updateFileHsah(fileinfo.path, hash, `${fileId}`);
-            }
-            // console.clear();  // 清除控制台
-            // console.log(223, window.location.href, location.pathname, fileinfo);
-            // console.log(223, window.location.href.indexOf(location.pathname), location.pathname);
-            fileIndex++;
-            // await waittime();
-            const [newProgressRes] = await get_progress_by_sourceId(`${fileId}`);
-            setPercent(Math.floor((fileIndex / newProgressRes.hash_null_count) * 100));
-            setDuplicateFilesStep(`: ${fileIndex} / ${newProgressRes.hash_null_count}`);
-            return Promise.resolve(0)
-          },
-          Promise.resolve(0)
+      await allList.reduce(async (prevPromise: any, index: number) => {
+        // 等待上一个 Promise 完成
+        await prevPromise;
+        if (
+          isCancelled ||
+          window.location.href.indexOf(location.pathname) < 0
+        ) {
+          // @ts-ignore
+          throw "提前终止";
+          return Promise.resolve(0);
+        } // 如果设置了取消标志，则提前终止
+        const [fileinfo, error] = await getFirstEmptyHashBySourceId(
+          `${fileId}`,
         );
+        if (fileinfo) {
+          // 获取文件类型和哈希
+          const hash = await File.getHash(fileinfo.path);
+          await updateFileHsah(fileinfo.path, hash, `${fileId}`);
+        }
+        // console.clear();  // 清除控制台
+        // console.log(223, window.location.href, location.pathname, fileinfo);
+        // console.log(223, window.location.href.indexOf(location.pathname), location.pathname);
+        fileIndex++;
+        // await waittime();
+        const [newProgressRes] = await get_progress_by_sourceId(`${fileId}`);
+        setPercent(
+          Math.floor((fileIndex / newProgressRes.hash_null_count) * 100),
+        );
+        setDuplicateFilesStep(
+          `: ${fileIndex} / ${newProgressRes.hash_null_count}`,
+        );
+        return Promise.resolve(0);
+      }, Promise.resolve(0));
 
       setStepsStatus({
         ...stepsStatus,
@@ -295,10 +296,14 @@ export default function CalculateDuplicateFiles() {
     return types;
   }
 
-
   function toNextPage() {
     navigate("/calculate-list/" + fileId);
   }
+
+  function toFilesManage() {
+    navigate("/files-manage/" + fileId);
+  }
+
   return (
     <div className={styles.CalculateDuplicateFiles}>
       <Row justify="start" align="middle">
@@ -311,6 +316,9 @@ export default function CalculateDuplicateFiles() {
           <Space>
             <Button type="primary" onClick={() => scanDirAll()}>
               开始
+            </Button>
+            <Button type="primary" onClick={() => toFilesManage()}>
+              管理
             </Button>
             <Button type="primary" onClick={() => toNextPage()}>
               预览重复数据

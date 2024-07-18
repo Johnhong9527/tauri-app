@@ -17,7 +17,7 @@ import { createSql } from "@/databases/createTableSql";
  */
 export async function insertSeletedFileHistory(
   path?: string,
-  fileInfoParams?: FileInfoType
+  fileInfoParams?: FileInfoType,
 ) {
   /*
       addType: ".1231,.kidd"
@@ -46,7 +46,7 @@ export async function insertSeletedFileHistory(
         fileInfoParams?.checkedSizeValues?.toString() || "",
         fileInfoParams?.checkedTypeValues?.toString() || "",
         fileInfoParams?.passType || "",
-      ]
+      ],
     );
     return false;
   } catch (err) {
@@ -59,7 +59,7 @@ export async function insertSeletedFileHistory(
 
 export async function updateSelectedFileHistory(
   path?: string,
-  fileInfoParams?: FileInfoType
+  fileInfoParams?: FileInfoType,
 ) {
   try {
     const DB = await Database.load("sqlite:files.db");
@@ -77,7 +77,7 @@ export async function updateSelectedFileHistory(
         fileInfoParams?.checkedTypeValues?.toString() || "",
         fileInfoParams?.passType || "",
         path, // 假设 path 变量是预定义的
-      ]
+      ],
     );
     return false;
   } catch (error) {
@@ -90,7 +90,7 @@ export async function updateSelectedFileHistory(
 
 export async function updateSelectedFileHistoryFiles(
   path: string,
-  filesNum: number
+  filesNum: number,
 ) {
   try {
     const DB = await Database.load("sqlite:files.db");
@@ -103,7 +103,7 @@ export async function updateSelectedFileHistoryFiles(
       [
         filesNum,
         path, // 假设 path 变量是预定义的
-      ]
+      ],
     );
     return false;
   } catch (error) {
@@ -120,7 +120,7 @@ export async function updateSelectedFileHistoryFiles(
  * @returns FileInfoType
  */
 export async function get_info_by_path(
-  path: string
+  path: string,
 ): Promise<[FileInfoType | boolean, string]> {
   try {
     // await table_init(FILE_DB_PATH, "select_history");
@@ -130,7 +130,7 @@ export async function get_info_by_path(
     await DB.execute(createSql.select_history);
     const res = await DB.select(
       "SELECT * FROM select_history WHERE path = $1",
-      [path]
+      [path],
     );
     if (Array.isArray(res)) {
       return [res[0], ""];
@@ -150,7 +150,7 @@ export async function get_info_by_path(
  * @returns FileInfoType
  */
 export async function get_info_by_id(
-  id: number
+  id: number,
 ): Promise<[FileInfoType | boolean, string]> {
   try {
     // await table_init(FILE_DB_PATH, "select_history");
@@ -208,7 +208,7 @@ export async function insertSearchFiles({
         modified_time,
         file_size,
         "1",
-      ]
+      ],
     );
     return Promise.resolve([true, ""]);
   } catch (err) {
@@ -231,7 +231,7 @@ export async function insertSearchFiles({
  */
 export async function get_all_history(
   page?: number,
-  pageSize?: number
+  pageSize?: number,
 ): Promise<{
   [x: string]: any;
   data: insertSearchFilesPasamsType[];
@@ -243,7 +243,7 @@ export async function get_all_history(
   await DB.execute(createSql.select_history);
   // 查询总记录数
   const totalResult = await DB.select(
-    "SELECT COUNT(*) AS total FROM select_history"
+    "SELECT COUNT(*) AS total FROM select_history",
   );
   // [Log] 128 – {lastInsertId: 0, rowsAffected: 0} (file-service.ts, line 51)
   const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
@@ -253,14 +253,14 @@ export async function get_all_history(
   // 获取当前页的数据
   const data = await DB.select(
     "SELECT * FROM select_history LIMIT ? OFFSET ?",
-    [pageSize, offset]
+    [pageSize, offset],
   );
   DB.close();
   return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
 }
 
 export async function get_list_by_sourceid(
-  sourceId: string
+  sourceId: string,
 ): Promise<[insertSearchFilesPasamsType[] | false, string]> {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
@@ -268,7 +268,7 @@ export async function get_list_by_sourceid(
     await DB.execute(createSql.search_files);
     const res = await DB.select(
       "SELECT * FROM search_files WHERE sourceId = $1 AND (hash = '' OR hash IS NULL)",
-      [sourceId]
+      [sourceId],
     );
 
     if (Array.isArray(res)) {
@@ -290,7 +290,7 @@ export async function delSelectedFileHistory(path?: string) {
       `DELETE FROM select_history WHERE path = $1`,
       [
         path, // 假设 path 变量是预定义的
-      ]
+      ],
     );
     return false;
   } catch (error) {
@@ -301,11 +301,11 @@ export async function delSelectedFileHistory(path?: string) {
   }
 }
 
-/* 
-count: 6, 
-                    hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", 
-                    paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg", 
-                    ids: "17,21,22,26,27,31", 
+/*
+count: 6,
+                    hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946",
+                    paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg",
+                    ids: "17,21,22,26,27,31",
                     times: "1718613803964,1718613804035,1718613804041,1718613804070,1718613804080,1718613804112"
 */
 type DuplicateFileInfo = {
@@ -352,7 +352,7 @@ WHERE s.sourceId = $1
 GROUP BY s.hash, s.sourceId
 HAVING COUNT(*) > 1;
 `,
-      [sourceId, page, pageSize]
+      [sourceId, page, pageSize],
     );
     return Promise.resolve([true, res]);
   } catch (err) {
@@ -364,7 +364,7 @@ HAVING COUNT(*) > 1;
 }
 
 export default async function get_progress_by_sourceId(
-  sourceId: string
+  sourceId: string,
 ): Promise<any> {
   const DB = await Database.load(`sqlite:files_${sourceId}.db`);
   // 创建表
@@ -376,7 +376,7 @@ export default async function get_progress_by_sourceId(
     COUNT(CASE WHEN sourceId = $1 THEN 1 ELSE NULL END) AS sourceId_count,
     COUNT(CASE WHEN hash IS NULL OR hash = '' THEN 1 ELSE NULL END) AS hash_null_count
 FROM search_files;`,
-    [sourceId]
+    [sourceId],
   );
 
   return res;
@@ -385,7 +385,7 @@ FROM search_files;`,
 export async function updateFileHsah(
   path?: string,
   hash?: string,
-  sourceId?: string
+  sourceId?: string,
 ) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
@@ -399,7 +399,7 @@ export async function updateFileHsah(
         hash,
         path, // 假设 path 变量是预定义的
         sourceId,
-      ]
+      ],
     );
     return false;
   } catch (error) {
@@ -410,15 +410,18 @@ export async function updateFileHsah(
   }
 }
 
-
-export async function get_fileInfo_by_id(id: string, sourceId: string) {
+export async function get_fileInfo_by_id(
+  id: string,
+  sourceId: string | undefined,
+) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    const res = await DB.select("SELECT * FROM search_files WHERE id = $1 and sourceId = $2", [
-      id, sourceId
-    ]);
+    const res = await DB.select(
+      "SELECT * FROM search_files WHERE id = $1 and sourceId = $2",
+      [id, sourceId],
+    );
     if (Array.isArray(res)) {
       return [res[0], ""];
     }
@@ -431,15 +434,15 @@ export async function get_fileInfo_by_id(id: string, sourceId: string) {
   }
 }
 
-
 export async function get_fileInfo_by_path(path: string, sourceId: string) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    const res = await DB.select("SELECT * FROM search_files WHERE path = $1 and sourceId = $2", [
-      path, sourceId
-    ]);
+    const res = await DB.select(
+      "SELECT * FROM search_files WHERE path = $1 and sourceId = $2",
+      [path, sourceId],
+    );
     if (Array.isArray(res) && res.length) {
       return [res[0], ""];
     }
@@ -462,7 +465,7 @@ export async function del_file_by_id(path: string, sourceId: string) {
       [
         path, // 假设 path 变量是预定义的
         sourceId,
-      ]
+      ],
     );
     return Promise.resolve(false);
   } catch (error) {
@@ -473,21 +476,18 @@ export async function del_file_by_id(path: string, sourceId: string) {
   }
 }
 
-
 /*
-* 这个函数是获取到第一个hash为空的数据*/
+ * 这个函数是获取到第一个hash为空的数据*/
 export async function getFirstEmptyHashBySourceId(sourceId: string) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
     const res = await DB.select(
-        `SELECT * FROM search_files
+      `SELECT * FROM search_files
 WHERE hash = '' OR hash IS NULL
 LIMIT 1;`,
-        [
-          sourceId
-        ]
+      [sourceId],
     );
     if (Array.isArray(res) && res.length) {
       return Promise.resolve([res[0], ""]);
@@ -504,16 +504,19 @@ LIMIT 1;`,
 /**
  * 重复文件数据
  * */
-export async function setDuplicateFile(sourceId: string, {
-  path,
-  type,
-  name,
-  hash,
-  creation_time,
-  modified_time,
-  file_size,
-  ids
-}: insertSearchFilesPasamsType) {
+export async function setDuplicateFile(
+  sourceId: string,
+  {
+    path,
+    type,
+    name,
+    hash,
+    creation_time,
+    modified_time,
+    file_size,
+    ids,
+  }: insertSearchFilesPasamsType,
+) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
@@ -536,8 +539,8 @@ export async function setDuplicateFile(sourceId: string, {
         modified_time,
         file_size,
         "1",
-        ids
-      ]
+        ids,
+      ],
     );
     return Promise.resolve([true, ""]);
   } catch (error) {
@@ -555,31 +558,28 @@ export async function setDuplicateFile(sourceId: string, {
  *          - data: FileInfoType[] - 当前页的记录数据数组。
  *          - total: number - 表中的总记录数，用于前端计算总页数。
  * */
-export async function getDuplicateFile(
-  {
-    page,
-    pageSize,
-    sourceId
-  }: 
-  {
-    page: number,
-    pageSize: number,
-    sourceId: string,
-    sorterOrder?: string,
-    sorterColumnKey?: string
-  }
-): Promise<{
+export async function getDuplicateFile({
+  page,
+  pageSize,
+  sourceId,
+}: {
+  page: number;
+  pageSize: number;
+  sourceId: string;
+  sorterOrder?: string;
+  sorterColumnKey?: string;
+}): Promise<{
   [x: string]: any;
   data: insertSearchFilesPasamsType[];
   total: number;
-}>  {
+}> {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.duplicate_files);
     // 查询总记录数
     const totalResult = await DB.select(
-      "SELECT COUNT(*) AS total FROM duplicate_files"
+      "SELECT COUNT(*) AS total FROM duplicate_files",
     );
     const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
     // 计算分页偏移量
@@ -587,15 +587,13 @@ export async function getDuplicateFile(
     // 获取当前页的数据
     const data = await DB.select(
       "SELECT * FROM duplicate_files LIMIT ? OFFSET ?",
-      [pageSize, offset]
+      [pageSize, offset],
     );
     return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
   } catch (error) {
     return { data: [], total: 0 };
   }
 }
-
-
 
 /*
 代码解释：
@@ -656,15 +654,15 @@ fetchData();
 
 */
 type SearchParam = {
-    sourceId: string,
-    keywords: { [key: string]: string }, // key: 字段名称, value: 搜索关键词
-    sorters: { column: string, order: 'ASC' | 'DESC' }[] // 排序数组
+  sourceId: string;
+  keywords: { [key: string]: string }; // key: 字段名称, value: 搜索关键词
+  sorters: { column: string; order: "ASC" | "DESC" }[]; // 排序数组
 };
 
 interface FetchParams {
-  page: number,
-  pageSize: number,
-  searchParams: SearchParam
+  page: number;
+  pageSize: number;
+  searchParams: SearchParam;
 }
 
 export async function getDuplicateFiles_v2({
@@ -683,7 +681,7 @@ export async function getDuplicateFiles_v2({
     const conditions = [];
     const params = [];
     // 处理多字段搜索
-    Object.keys(searchParams.keywords).forEach(field => {
+    Object.keys(searchParams.keywords).forEach((field) => {
       if (searchParams.keywords[field]) {
         conditions.push(`${field} LIKE '%${searchParams.keywords[field]}%' `);
       }
@@ -691,23 +689,21 @@ export async function getDuplicateFiles_v2({
     // 计算分页偏移量
     const offset = page * pageSize;
     // 动态构建排序条件
-    const orderByClauses = searchParams.sorters.map(sorter => `${sorter.column} ${sorter.order}`).join(', ');
-    const orderBy = orderByClauses ? `ORDER BY ${orderByClauses}` : '';
+    const orderByClauses = searchParams.sorters
+      .map((sorter) => `${sorter.column} ${sorter.order}`)
+      .join(", ");
+    const orderBy = orderByClauses ? `ORDER BY ${orderByClauses}` : "";
     // 查询总记录数（考虑搜索条件）
-    const totalQuery = `SELECT COUNT(*) AS total FROM duplicate_files ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}`;
+    const totalQuery = `SELECT COUNT(*) AS total FROM duplicate_files ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}`;
     const totalResult = await DB.select(totalQuery, params);
     const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
     // 获取当前页的数据
-    const dataQuery = `SELECT * FROM duplicate_files ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''} ${orderBy} LIMIT ? OFFSET ?`;
+    const dataQuery = `SELECT * FROM duplicate_files ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""} ${orderBy} LIMIT ? OFFSET ?`;
     params.push(pageSize, offset);
     const data = await DB.select(dataQuery, params);
     return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
     return { data: [], total: 0 };
   }
 }
-
-
-
-
