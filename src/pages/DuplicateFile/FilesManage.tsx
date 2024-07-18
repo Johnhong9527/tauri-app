@@ -384,7 +384,7 @@ export default function FilesManage() {
             <FolderOpenOutlined
               onClick={() =>
                 openFileShowInExplorer(
-                  "/Users/sysadmin/Library/Application Support/com.hht.com/files_3.db",
+                    `${record.path}`
                 )
               }
             />
