@@ -577,7 +577,9 @@ export async function getDuplicateFile(
   {
     page: number,
     pageSize: number,
-    sourceId: string
+    sourceId: string,
+    sorterOrder?: string,
+    sorterColumnKey?: string
   }
 ): Promise<{
   [x: string]: any;
@@ -594,7 +596,7 @@ export async function getDuplicateFile(
     );
     const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
     // 计算分页偏移量
-    const offset = (page || 1 - 1) * (pageSize || 10);
+    const offset = (page - 1 || 1 - 1) * (pageSize || 10);
     // 获取当前页的数据
     const data = await DB.select(
       "SELECT * FROM duplicate_files LIMIT ? OFFSET ?",
@@ -605,6 +607,129 @@ export async function getDuplicateFile(
     return { data: [], total: 0 };
   }
 }
+
+
+
+/*
+代码解释：
+多字段搜索：通过遍历 searchParams.keywords 对象，为每个指定的字段添加模糊搜索条件。
+多字段排序：searchParams.sorters 是一个包含多个排序规则的数组，这些规则被转换为 SQL ORDER BY 子句的一部分。
+参数化查询：继续使用参数化查询以防止 SQL 注入，并确保查询的安全性和效率。
+这种方式为你的应用提供了更灵活的数据检索方式，使其能够根据多个字段进行搜索和排序。
+
+
+以下是一个调用上述 `getDuplicateFiles` 函数的示例，该示例演示如何根据多个字段进行搜索和排序。在这个示例中，我们假设你正在查找包含特定关键字的文件名称或路径，并希望结果先按文件大小降序排列，然后按创建时间升序排列。
+
+### 示例调用
+
+假设你正在编写一个前端界面或服务端处理请求的脚本，这里是如何设置参数并调用函数的：
+
+```javascript
+async function fetchData() {
+  // 设置分页参数
+  const page = 1;
+  const pageSize = 10;
+
+  // 设置搜索和排序参数
+  const searchParams = {
+    sourceId: '123', // 假设的 sourceId
+    keywords: {
+      name: 'report', // 搜索文件名包含 'report'
+      path: '2024'    // 搜索路径包含 '2024'
+    },
+    sorters: [
+      { column: 'file_size', order: 'DESC' }, // 按文件大小降序
+      { column: 'create_time', order: 'ASC' } // 按创建时间升序
+    ]
+  };
+
+  // 调用函数获取数据
+  try {
+    const result = await getDuplicateFiles({ page, pageSize, searchParams });
+    console.log('Fetched Data:', result.data);
+    console.log('Total Records:', result.total);
+  } catch (error) {
+    console.error('Error fetching duplicate files:', error);
+  }
+}
+
+// 执行函数
+fetchData();
+```
+
+### 函数行为说明：
+
+- **分页**：查询第一页数据，每页显示10条记录。
+- **搜索条件**：
+  - 在 `name` 字段中搜索包含 "report" 的记录。
+  - 在 `path` 字段中搜索包含 "2024" 的记录。
+- **排序条件**：
+  - 首先按 `file_size` 字段降序排列，确保较大的文件先显示。
+  - 然后按 `create_time` 字段升序排列，较早创建的文件在相同大小的情况下先显示。
+
+这个示例充分展示了如何在实际应用中使用灵活的查询功能，满足复杂的数据检索需求。
+
+*/
+type SearchParam = {
+    sourceId: string,
+    keywords: { [key: string]: string }, // key: 字段名称, value: 搜索关键词
+    sorters: { column: string, order: 'ASC' | 'DESC' }[] // 排序数组
+};
+
+interface FetchParams {
+  page: number,
+  pageSize: number,
+  searchParams: SearchParam
+}
+
+export async function getDuplicateFiles_v2({
+  page,
+  pageSize,
+  searchParams,
+}: FetchParams): Promise<{
+  data: FileInfoType[];
+  total: number;
+}> {
+  try {
+    const DB = await Database.load(`sqlite:files_${searchParams.sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.duplicate_files);
+    // 动态构建查询条件
+    const conditions = [];
+    const params = [];
+
+    // 处理多字段搜索
+    Object.keys(searchParams.keywords).forEach(field => {
+      if (searchParams.keywords[field]) {
+        conditions.push(`${field} LIKE ?`);
+        params.push(`%${searchParams.keywords[field]}%`);
+      }
+    });
+
+    // 计算分页偏移量
+    const offset = (page - 1) * pageSize;
+
+    // 动态构建排序条件
+    const orderByClauses = searchParams.sorters.map(sorter => `${sorter.column} ${sorter.order}`).join(', ');
+    const orderBy = orderByClauses ? `ORDER BY ${orderByClauses}` : '';
+
+    // 查询总记录数（考虑搜索条件）
+    const totalQuery = `SELECT COUNT(*) AS total FROM duplicate_files ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}`;
+    const totalResult = await DB.select(totalQuery, params);
+    const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
+
+    // 获取当前页的数据
+    const dataQuery = `SELECT * FROM duplicate_files ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''} ${orderBy} LIMIT ? OFFSET ?`;
+    params.push(pageSize, offset);
+    const data = await DB.select(dataQuery, params);
+
+    return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return { data: [], total: 0 };
+  }
+}
+
 
 
 

@@ -9,6 +9,7 @@ import {
   Button,
   Spin,
   Empty,
+  Table,
 } from "antd";
 import type { CheckboxProps } from "antd";
 import { useEffect, useState } from "react";
@@ -17,7 +18,8 @@ import {
   get_fileInfo_by_id,
   searchDuplicateFile,
   setDuplicateFile,
-  getDuplicateFile
+  getDuplicateFile,
+  getDuplicateFiles_v2
 } from "@/services";
 import {
   message as tauriMessage,
@@ -44,6 +46,12 @@ export default function CalculateListPage() {
   const [tip, setTip] = useState<string>('');
   const [removeList, setRemoveList] = useState<string[]>([]);
   const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [userSelectedRowKeys, setUserSelectedRowKeys] = useState<string[]>([]);
+  const [tableKey, setTableKey] = useState('123456')
+  const [sorterOrder, setSorterOrder] = useState('')
+  const [sorterColumnKey, setSorterColumnKey] = useState({})
   interface FileItem {
     sourceId: number;
     ids: string;
@@ -51,18 +59,33 @@ export default function CalculateListPage() {
     count: number;
     firstItem: insertSearchFilesPasamsType;
     otherItems: insertSearchFilesPasamsType[];
+    children: insertSearchFilesPasamsType[];
   }
 
   async function getFileList() {
     setLoading(true);
-    setTip('加载数据中~')
-    const res = await getDuplicateFile({
-      sourceId: `${fileId}`,
-       page,
-      pageSize: 10
+    setTip('加载数据中~');
+    const sorters = [];
+    Object.keys(sorterColumnKey).forEach(key => {
+      sorters.push({
+        column: key,
+        order: sorterColumnKey[key]
+      })
     })
+    const res = await getDuplicateFiles_v2({
+      searchParams: {
+        sourceId: `${fileId}`,
+        keywords: {},
+        sorters: sorters
+      },
+      page,
+      pageSize
+    })
+    console.log(69696969, sorterColumnKey);
     const newData: any[] = [];
-    if(Array.isArray(res.data)) {
+    const allids = []
+    setTotal(res.total)
+    if(Array.isArray(res.data) && res.data.length) {
       await res.data.reduce(
         async (prevPromise: any, currentFile: any) => {
           const ids = currentFile.ids.split(",");
@@ -76,35 +99,41 @@ export default function CalculateListPage() {
               })
               .filter((elm: any) => elm)
           );
+          const children = otherItems
+            .map((elm) => {
+              if (elm.status === "fulfilled" && !elm.value[1]) {
+                allids.push(`${ids[0]}_${elm.value[0].id}`)
+                return {
+                  id: `${ids[0]}_${elm.value[0].id}`,
+                  key: `${ids[0]}_${elm.value[0].id}`,
+                  ...elm.value[0]
+                };
+              }
+              return false;
+            })
+            .filter((elm: any) => elm)
+          allids.push(ids[0]);
           newData.push({
             ...currentFile,
-            otherItems: otherItems
-              .map((elm) => {
-                if (elm.status === "fulfilled" && !elm.value[1]) {
-                  return elm.value[0];
-                }
-                return false;
-              })
-              .filter((elm: any) => elm),
+            id: ids[0],
+            key: ids[0],
+            children: children,
+            otherItems: children,
           });
           return Promise.resolve(0)
         }
       ), Promise.resolve(0)
-      const allFilesHash = data.map(elm => elm.hash);
-      const noDuplicateData = newData.filter(elm => {
-        if(allFilesHash.indexOf(elm.hash) > -1) {
-          return false
-        }
-        return elm
-      })
-      setData([
-        ...data,
-        ...noDuplicateData
-      ]);
+      setData(newData);
+      setTableKey(`${new Date().getTime()}`);
       setTimeout(() => {
         setLoading(false);
         setTip('');
       }, 300)
+    } else {
+      setData([]);
+      setTableKey(`${new Date().getTime()}`);
+      setLoading(false);
+      setTip('');
     }
   }
   const appendData = async () => {
@@ -171,43 +200,6 @@ export default function CalculateListPage() {
     const res = await File.showFileInExplorer(path);
   };
 
-  const CheckboxContent = (item: insertSearchFilesPasamsType) => (
-    <div className={styles.CheckboxContent}>
-      <div>
-        <FolderOpenOutlined onClick={() => openFileShowInExplorer(item.path)} />
-      </div>
-      <div className={styles.modified_time}>
-        <CopyText
-          width="300px"
-          color="#333"
-          ellipsisLine={0}
-          name={item.name || ""}
-        ></CopyText>
-      </div>
-      <div className={styles.path}>
-        <CopyText
-          width="300px"
-          color="#333"
-          ellipsisLine={1}
-          name={item.path || ""}
-        ></CopyText>
-      </div>
-      <div className={styles.modified_time}>
-        <CopyText
-          width="150px"
-          color="#333"
-          name={item.modified_time ? dayjs.unix(item.modified_time).format('YYYY-MM-DD HH:mm:ss') : ""}
-        ></CopyText>
-      </div>
-      <div className={styles.modified_time}>
-        <CopyText
-          width="100px"
-          color="#333"
-          name={item.file_size ? formatFileSize(item.file_size) : ''}
-        ></CopyText>
-      </div>
-    </div>
-  );
   const waittime = (time = 100) => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -215,6 +207,7 @@ export default function CalculateListPage() {
       }, time);
     });
   };
+
   async function removeFilesByDB() {
     setLoading(true);
     const filesRes = await Promise.allSettled(
@@ -259,6 +252,7 @@ export default function CalculateListPage() {
       type: "error",
     });
   }
+
   async function openDialogSave() {
     // const appDataDir = await File.getAppDataDir();
     // const appDataDirPath = await appDataDir();
@@ -283,98 +277,162 @@ export default function CalculateListPage() {
       ],
     });
   }
+
   useEffect(() => {
-    if(data.length) {
-      getFileList();  
-    }
-  }, [page])
-  function getNext() {
-    setPage(page + 1);
+    getFileList();
+  }, [page, pageSize, sorterColumnKey, sorterOrder])
+
+  const columns: ColumnsType<DataType> = [
+    {
+      title: '文件名称',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string, record: { name?: string, path?: string }) => (
+        <Row>
+          <Col span={2}>
+            <FolderOpenOutlined onClick={() => openFileShowInExplorer('/Users/sysadmin/Library/Application Support/com.hht.com/files_3.db')} />
+          </Col>
+          <Col span={22}>
+            {record.name}
+          </Col>
+        </Row>
+      )
+    },
+    {
+      title: '文件路径',
+      dataIndex: 'path',
+      key: 'path',
+      render: (text: string, record: { path?: string }) => (
+        <Row>
+          
+          <CopyText
+            width="300px"
+            ellipsisLine={1}
+            color="#333"
+            name={record.path || ""}
+          ></CopyText>
+        </Row>
+        ),
+    },
+    {
+      title: '文件大小',
+      dataIndex: 'file_size',
+      key: 'file_size',
+      sorter: true,
+      render: (text: string, record: { file_size?: string }) => (
+          <CopyText
+            width="150px"
+            ellipsisLine={1}
+            color="#333"
+            name={formatFileSize(record.file_size)}
+          ></CopyText>
+        ),
+    },
+    {
+      title: '修改时间',
+      dataIndex: 'modified_time',
+      key: 'modified_time',
+      render: (text: string, record: { modified_time?: string }) => (
+          <CopyText
+            width="160px"
+            ellipsisLine={1}
+            color="#333"
+            name={dayjs.unix(record.modified_time).format('YYYY-MM-DD HH:mm:ss') }
+          ></CopyText>
+        ),
+    },
+  ];
+
+  // rowSelection objects indicates the need for row selection
+  const rowSelection: TableRowSelection<DataType> = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+      setUserSelectedRowKeys(selectedRowKeys);
+    },
+    onSelect: (record, selected, selectedRows) => {
+      console.log('onSelect', record, selected, selectedRows);
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log('onSelectAll', selected, selectedRows, changeRows);
+    },
+    selectedRowKeys: userSelectedRowKeys
+  };
+  const expandable = {
+    defaultExpandAllRows: true
   }
+  const [checkStrictly, setCheckStrictly] = useState(false);
+
+  function onTableChange(pagination,filters, sorter,extra) {
+    console.log('pagination', pagination);
+    console.log('sorter', sorter);
+    if(pagination.current !== page) {
+      setTotal(0);
+      setPage(pagination.current);
+      return
+    }
+    if(pagination.pageSize !== pageSize) {
+      setTotal(0);
+      setPage(1);
+      setPageSize(pagination.pageSize);
+      return
+    }
+    // 筛选排序
+    if (sorter && JSON.stringify(sorter) !== {} && sorter.order !== sorterOrder) {
+      setTotal(0);
+      setPage(1);
+      if(sorter.order) {
+        setSorterColumnKey({
+          ...sorterColumnKey,
+          [sorter.columnKey]: sorter.order === 'ascend' ? 'ASC' : 'DESC'
+        })
+      } else {
+        const _sorterColumnKey = {...sorterColumnKey}
+        delete _sorterColumnKey[[sorter.columnKey]]
+        setSorterColumnKey({
+          ..._sorterColumnKey
+        })
+      }
+    }
+  }
+
   return (
     <div className={styles.CalculateListPage}>
-      <Spin spinning={loading} tip={tip}>
+      <Space>
+        <Button type="primary" danger onClick={() => removeFilesByDB()}>
+          删除选中的文件
+        </Button>
+        <Button type="primary" onClick={() => openDialogSave()}>
+          统一移动到指定目录
+        </Button>
+        <Button type="primary">导出</Button>
+      </Space>
+      <Table
+        columns={columns}
+        loading={loading}
+        pagination={{
+          total,
+          pageSize,
+          current: page,
+          showQuickJumper: true
+        }}
+        rowSelection={{ ...rowSelection}}
+        expandable={{
+          defaultExpandAllRows: false
+        }}
+        dataIndex="id"
+        dataSource={data}
+        onChange={onTableChange}
+      />
+      {!data.length && !loading && (
         <div
           style={{
-            padding: "24px",
-            minHeight: '50vh'
+            padding: "48px 0",
+            backgroundColor: "#fff",
           }}
         >
-          <Space>
-            <Button type="primary" danger onClick={() => removeFilesByDB()}>
-              删除选中的文件
-            </Button>
-            <Button type="primary" onClick={() => openDialogSave()}>
-              统一移动到指定目录
-            </Button>
-            <Button type="primary">导出</Button>
-          </Space>
-          <div style={{ marginBottom: "12px" }}></div>
-          <Checkbox.Group
-            onChange={onChange}
-            style={{ width: "100%" }}
-            value={removeList}
-          >
-            <div style={{ width: "100%" }}>
-              <List>
-                <VirtualList
-                    data={data}
-                    itemKey="hash"
-                >
-                {/*height={ContainerHeight}*/}
-                  {(item: any) => (
-                    <List.Item key={item.hash}>
-                      <div
-                        key={item.hash}
-                        style={{
-                          backgroundColor: "var(--color-2)",
-                          marginBottom: "24px",
-                          width: '100%'
-                        }}
-                      >
-                        <div className={styles.CheckboxGroup}>
-                          <Checkbox value={item.path}>
-                            {CheckboxContent(item as any)}
-                            {/*item.path*/}
-                          </Checkbox>
-                        </div>
-                        <div
-                          style={{
-                            border: "1px solid var(--color-1)",
-                            padding: "12px 3px",
-                          }}
-                          className={styles.CheckboxGroup}
-                        >
-                          {item.otherItems.map((otherItem) => (
-                            <div key={otherItem.path}>
-                              <Checkbox value={otherItem.path}>
-                                {CheckboxContent(otherItem)}
-                              </Checkbox>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </List.Item>
-                  )}
-                </VirtualList>
-              </List>
-            </div>
-          </Checkbox.Group>
-          <Button type="primary" onClick={() => getNext()}>
-            加载更多
-          </Button>
-          {!data.length && !loading && (
-            <div
-              style={{
-                padding: "48px 0",
-                backgroundColor: "#fff",
-              }}
-            >
-              <Empty description={"当前目录没有找到重复的文件"} />
-            </div>
-          )}
+          <Empty description={"当前目录没有找到重复的文件"} />
         </div>
-      </Spin>
+      )}
     </div>
   );
 }
