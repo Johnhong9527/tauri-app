@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Routes, Route, Outlet, Link, createBrowserRouter } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Outlet,
+  Link,
+  createBrowserRouter,
+} from "react-router-dom";
 import Layout from "@/components/Layout/Layout";
 // import Home from "@/pages/Home/Home";
 import About from "@/pages/About/About";
@@ -12,13 +18,13 @@ import DuplicateFile from "@/pages/DuplicateFile/DuplicateFile";
 import CalculateDuplicateFiles from "@/pages/DuplicateFile/CalculateDuplicateFiles";
 import DuplicateFileInfo from "@/pages/DuplicateFile/FileInfo";
 // import CalculateListPage from "@/pages/DuplicateFile/CalculateListPage";
-import CalculateListPage from '@/pages/DuplicateFile/CalculateListPage'
-import ManageDuplicateFiles from '@/pages/DuplicateFile/ManageDuplicateFiles'
-import FilesManage from '@/pages/DuplicateFile/FilesManage'
+import CalculateListPage from "@/pages/DuplicateFile/CalculateListPage";
+import ManageDuplicateFiles from "@/pages/DuplicateFile/ManageDuplicateFiles";
+import FilesManage from "@/pages/DuplicateFile/FilesManage";
 
 /* 收藏夹管理 */
-import BookmarksIndex from '@/pages/Bookmarks/List'
-import BookmarksList from '@/pages/Bookmarks/List'
+import BookmarksIndex from "@/pages/Bookmarks/List";
+import BookmarksList from "@/pages/Bookmarks/List";
 /* export default function Router() {
   return (
     <Routes>
@@ -39,90 +45,93 @@ import BookmarksList from '@/pages/Bookmarks/List'
   );
 } */
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    id: "root",
-    element: <Layout />,
-    /* 
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      id: "root",
+      element: <Layout />,
+      /*
     // loader: rootLoader,
     每个路由都可以定义一个“加载器”函数，以便在路由元素呈现之前向路由元素提供数据。
       loader: async () => {
         return fakeDb.from("teams").select("*");
       },
     */
-    children: [
-      {
-        path: "",
-        element: <DuplicateFileIndex />,
-        children: [
-          {
-            path: "",
-            element: <DuplicateFile />,
-          },
-          {
-            path: "info/:fileId",
-            element: <DuplicateFileInfo />,
-          },
-          {
-            path: "calculate/:fileId",
-            element: <CalculateDuplicateFiles />,
-          },
-          {
-            path: "calculate-list/:fileId",
-            element: <CalculateListPage />,
-          },
-          {
-            path: "ManageDuplicateFiles/:fileId",
-            element: <ManageDuplicateFiles />,
-          },
-          {
-            path: "files-manage/:fileId",
-            element: <FilesManage />,
-          },
-        ]
-      },
-      {
-        path: "about",
-        element: <About />,
-      },
-      {
-        path: "finder",
-        element: <Finder />,
-      },
-      {
-        path: "setting",
-        element: <Setting />,
-      },
-      {
-        path: "file-sort",
-        element: <FileSort />,
-      },
-      {
-        path: "file-clear",
-        element: <FileClear />,
-      }
-      // {
-      //   path: "duplicate-file",
-      //   element: <DuplicateFileIndex />,
-      //   children: [
-      //     {
-      //       path: "",
-      //       element: <DuplicateFile />,
-      //     },
-      //     {
-      //       path: "info/:fileId",
-      //       element: <DuplicateFileInfo />,
-      //     }
-      //   ]
-      // },
-    ],
+      children: [
+        {
+          path: "",
+          element: <DuplicateFileIndex />,
+          children: [
+            {
+              path: "",
+              element: <DuplicateFile />,
+            },
+            {
+              path: "info/:fileId",
+              element: <DuplicateFileInfo />,
+            },
+            {
+              path: "calculate/:fileId",
+              element: <CalculateDuplicateFiles />,
+            },
+            {
+              path: "calculate-list/:fileId",
+              element: <CalculateListPage />,
+            },
+            {
+              path: "ManageDuplicateFiles/:fileId",
+              element: <ManageDuplicateFiles />,
+            },
+            {
+              path: "files-manage/:fileId",
+              element: <FilesManage />,
+            },
+          ],
+        },
+        {
+          path: "about",
+          element: <About />,
+        },
+        {
+          path: "finder",
+          element: <Finder />,
+        },
+        {
+          path: "setting",
+          element: <Setting />,
+        },
+        {
+          path: "file-sort",
+          element: <FileSort />,
+        },
+        {
+          path: "file-clear",
+          element: <FileClear />,
+        },
+        // {
+        //   path: "duplicate-file",
+        //   element: <DuplicateFileIndex />,
+        //   children: [
+        //     {
+        //       path: "",
+        //       element: <DuplicateFile />,
+        //     },
+        //     {
+        //       path: "info/:fileId",
+        //       element: <DuplicateFileInfo />,
+        //     }
+        //   ]
+        // },
+      ],
+    },
+  ],
+  {
+    future: {
+      // Normalize `useNavigation()`/`useFetcher()` `formMethod` to uppercase
+      v7_normalizeFormMethod: true,
+    },
   },
-], {
-  future: {
-    // Normalize `useNavigation()`/`useFetcher()` `formMethod` to uppercase
-    v7_normalizeFormMethod: true,
-  },
-});
+);
 
-export default router
+export default router;
