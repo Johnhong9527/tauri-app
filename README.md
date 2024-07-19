@@ -1,5 +1,5 @@
-# Tauri + React + Typescript
-
+## 项目说明
+ - 1、Tauri + React + Typescript
 This template should help get you started developing with Tauri, React and Typescript in Vite.
 
 ## Recommended IDE Setup
@@ -57,3 +57,7 @@ https://github.com/launchbadge/sqlx
 
 ## 1.1.0 更新说明
 移除项目中的所有冗余代码
+
+## 问题解答
+- 问题1.macOS 无法使用本软件, 移除macOS系统对指定软件的安全验证
+- 问题1解答: sudo xattr -dr com.apple.quarantine /Applications/<本软件名称>

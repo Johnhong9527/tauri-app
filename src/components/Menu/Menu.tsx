@@ -14,7 +14,7 @@ export default function Menu() {
 
   async function initMenu() {
     console.log(141414, location);
-    
+
     // const config = LogicalSize;
     // console.log({ LogicalSize: new LogicalSize() });
     // console.log(window);
@@ -24,16 +24,16 @@ export default function Menu() {
     {
       label: "常用",
       child: [
+        // {
+        //   label: "文件整理",
+        //   path: "/file-sort",
+        // },
+        // {
+        //   label: "文件清理",
+        //   path: "/file-clear",
+        // },
         {
-          label: "文件整理",
-          path: "/file-sort",
-        },
-        {
-          label: "文件清理",
-          path: "/file-clear",
-        },
-        {
-          label: "重复文件",
+          label: "文件管理",
           path: "/",
         },
       ],
@@ -72,7 +72,7 @@ export default function Menu() {
                   key={childItem.label}
                   className={clsx(
                     styles.childItemLabel,
-                    active === childItem.label && styles.active
+                    active === childItem.label && styles.active,
                   )}
                   onClick={() =>
                     menuHandle(childItem.path || "", childItem.label)
