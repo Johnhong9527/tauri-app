@@ -40,6 +40,7 @@ export const createSql = {
         hash TEXT,
         db_version TEXT,
         ids  TEXT,
+        idsNum INTEGER,
         UNIQUE (hash)
     );`,
 };

@@ -21,6 +21,7 @@ import get_progress_by_sourceId, {
   get_fileInfo_by_path,
   get_list_by_sourceid,
   updateFileHsah,
+  duplicateFilesDBInit,
 } from "@/services/file-service";
 
 export default function CalculateDuplicateFiles() {
@@ -78,6 +79,7 @@ export default function CalculateDuplicateFiles() {
   async function pageInit() {
     if (fileId) {
       const [data, errorMsg] = await get_info_by_id(Number.parseInt(fileId));
+      await duplicateFilesDBInit(`${fileId}`);
       if (data && typeof data === "object") {
         setFileInfo(data);
       } else {

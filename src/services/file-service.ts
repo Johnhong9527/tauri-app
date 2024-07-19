@@ -515,6 +515,7 @@ export async function setDuplicateFile(
     modified_time,
     file_size,
     ids,
+    idsNum,
   }: insertSearchFilesPasamsType,
 ) {
   try {
@@ -524,9 +525,9 @@ export async function setDuplicateFile(
     await DB.execute(
       `
         INSERT into duplicate_files 
-          (create_time, sourceId, name, type, path, hash, creation_time, modified_time, file_size, db_version, ids) 
+          (create_time, sourceId, name, type, path, hash, creation_time, modified_time, file_size, db_version, ids, idsNum) 
         VALUES 
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       `,
       [
         new Date().getTime(),
@@ -540,6 +541,7 @@ export async function setDuplicateFile(
         file_size,
         "1",
         ids,
+        idsNum,
       ],
     );
     return Promise.resolve([true, ""]);
@@ -707,5 +709,16 @@ export async function getDuplicateFiles_v2({
   } catch (error) {
     console.error("Error fetching data:", error);
     return { data: [], total: 0 };
+  }
+}
+
+export async function duplicateFilesDBInit(sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    await DB.execute(createSql.duplicate_files);
+  } catch (error) {
+    console.log(error);
   }
 }
