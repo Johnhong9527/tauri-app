@@ -14,6 +14,11 @@ import DuplicateFileInfo from "@/pages/DuplicateFile/FileInfo";
 // import CalculateListPage from "@/pages/DuplicateFile/CalculateListPage";
 import CalculateListPage from '@/pages/DuplicateFile/CalculateListPage'
 import ManageDuplicateFiles from '@/pages/DuplicateFile/ManageDuplicateFiles'
+import FilesManage from '@/pages/DuplicateFile/FilesManage'
+
+/* 收藏夹管理 */
+import BookmarksIndex from '@/pages/Bookmarks/List'
+import BookmarksList from '@/pages/Bookmarks/List'
 /* export default function Router() {
   return (
     <Routes>
@@ -70,7 +75,11 @@ const router = createBrowserRouter([
           {
             path: "ManageDuplicateFiles/:fileId",
             element: <ManageDuplicateFiles />,
-          }
+          },
+          {
+            path: "files-manage/:fileId",
+            element: <FilesManage />,
+          },
         ]
       },
       {

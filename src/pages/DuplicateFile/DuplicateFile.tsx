@@ -59,7 +59,10 @@ export default function DuplicateFile() {
       key: "id",
       width: 30,
       render: (text: string, record: { id?: number }) => (
-        <CopyText width="30px" color="#333" name={record.id || ""}></CopyText>
+        <Button onClick={() => openModal(record)} type={"link"}>
+          {record.id}
+        </Button>
+        // <CopyText width="30px" color="#333" name={record.id || ""}></CopyText>
       ),
     },
     {
@@ -109,16 +112,12 @@ export default function DuplicateFile() {
       width: 220,
       render: (text: string, record: FileInfoType) => (
         <Space size="middle" style={{ width: "220px" }} align="baseline">
-          <Button onClick={() => openModal(record)} type="default">
-            修改
-          </Button>
           <Button
             type="primary"
             onClick={() => calculateDuplicateFiles(record)}
           >
-            运行
+            管理
           </Button>
-
           <Popconfirm
             title="Delete the task"
             description="Are you sure to delete this task?"
@@ -127,7 +126,7 @@ export default function DuplicateFile() {
             cancelText="No"
           >
             <Button type="primary" danger>
-              删除
+              移除
             </Button>
           </Popconfirm>
         </Space>

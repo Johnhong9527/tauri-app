@@ -17,7 +17,7 @@ import { createSql } from "@/databases/createTableSql";
  */
 export async function insertSeletedFileHistory(
   path?: string,
-  fileInfoParams?: FileInfoType
+  fileInfoParams?: FileInfoType,
 ) {
   /*
       addType: ".1231,.kidd"
@@ -46,11 +46,10 @@ export async function insertSeletedFileHistory(
         fileInfoParams?.checkedSizeValues?.toString() || "",
         fileInfoParams?.checkedTypeValues?.toString() || "",
         fileInfoParams?.passType || "",
-      ]
+      ],
     );
     return false;
   } catch (err) {
-    console.log(5454, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前路径重复";
     }
@@ -60,7 +59,7 @@ export async function insertSeletedFileHistory(
 
 export async function updateSelectedFileHistory(
   path?: string,
-  fileInfoParams?: FileInfoType
+  fileInfoParams?: FileInfoType,
 ) {
   try {
     const DB = await Database.load("sqlite:files.db");
@@ -78,11 +77,10 @@ export async function updateSelectedFileHistory(
         fileInfoParams?.checkedTypeValues?.toString() || "",
         fileInfoParams?.passType || "",
         path, // 假设 path 变量是预定义的
-      ]
+      ],
     );
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -92,7 +90,7 @@ export async function updateSelectedFileHistory(
 
 export async function updateSelectedFileHistoryFiles(
   path: string,
-  filesNum: number
+  filesNum: number,
 ) {
   try {
     const DB = await Database.load("sqlite:files.db");
@@ -105,11 +103,10 @@ export async function updateSelectedFileHistoryFiles(
       [
         filesNum,
         path, // 假设 path 变量是预定义的
-      ]
+      ],
     );
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -123,7 +120,7 @@ export async function updateSelectedFileHistoryFiles(
  * @returns FileInfoType
  */
 export async function get_info_by_path(
-  path: string
+  path: string,
 ): Promise<[FileInfoType | boolean, string]> {
   try {
     // await table_init(FILE_DB_PATH, "select_history");
@@ -133,7 +130,7 @@ export async function get_info_by_path(
     await DB.execute(createSql.select_history);
     const res = await DB.select(
       "SELECT * FROM select_history WHERE path = $1",
-      [path]
+      [path],
     );
     if (Array.isArray(res)) {
       return [res[0], ""];
@@ -153,7 +150,7 @@ export async function get_info_by_path(
  * @returns FileInfoType
  */
 export async function get_info_by_id(
-  id: number
+  id: number,
 ): Promise<[FileInfoType | boolean, string]> {
   try {
     // await table_init(FILE_DB_PATH, "select_history");
@@ -211,11 +208,10 @@ export async function insertSearchFiles({
         modified_time,
         file_size,
         "1",
-      ]
+      ],
     );
     return Promise.resolve([true, ""]);
   } catch (err) {
-    // console.log(145, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return Promise.resolve([false, "当前路径重复"]);
     }
@@ -235,7 +231,7 @@ export async function insertSearchFiles({
  */
 export async function get_all_history(
   page?: number,
-  pageSize?: number
+  pageSize?: number,
 ): Promise<{
   [x: string]: any;
   data: insertSearchFilesPasamsType[];
@@ -247,9 +243,8 @@ export async function get_all_history(
   await DB.execute(createSql.select_history);
   // 查询总记录数
   const totalResult = await DB.select(
-    "SELECT COUNT(*) AS total FROM select_history"
+    "SELECT COUNT(*) AS total FROM select_history",
   );
-  console.log(128, totalResult);
   // [Log] 128 – {lastInsertId: 0, rowsAffected: 0} (file-service.ts, line 51)
   const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
   // 计算分页偏移量
@@ -258,33 +253,23 @@ export async function get_all_history(
   // 获取当前页的数据
   const data = await DB.select(
     "SELECT * FROM select_history LIMIT ? OFFSET ?",
-    [pageSize, offset]
+    [pageSize, offset],
   );
-  console.log(138, data, pageSize, offset);
   DB.close();
   return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
 }
 
 export async function get_list_by_sourceid(
-  sourceId: string
+  sourceId: string,
 ): Promise<[insertSearchFilesPasamsType[] | false, string]> {
   try {
-    // await table_init(FILE_DB_PATH, "select_history");
-    // const DB = await SQLite.open(FILE_DB_PATH);
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
     const res = await DB.select(
-      "SELECT * FROM search_files WHERE sourceId = $1",
-      [sourceId]
+      "SELECT * FROM search_files WHERE sourceId = $1 AND (hash = '' OR hash IS NULL)",
+      [sourceId],
     );
-    console.log(969696, sourceId);
-
-    /* const res = await DB.queryWithArgs<Array<insertSearchFilesPasamsType>>(
-          "SELECT * FROM search_files WHERE sourceId = :sourceId GROUP BY hash HAVING COUNT(*) > 1",
-          { ":sourceId": sourceid }
-        ); */
-    console.log(3434, res);
 
     if (Array.isArray(res)) {
       return [res, ""];
@@ -305,12 +290,10 @@ export async function delSelectedFileHistory(path?: string) {
       `DELETE FROM select_history WHERE path = $1`,
       [
         path, // 假设 path 变量是预定义的
-      ]
+      ],
     );
-    console.log(206, result);
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -318,11 +301,11 @@ export async function delSelectedFileHistory(path?: string) {
   }
 }
 
-/* 
-count: 6, 
-                    hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946", 
-                    paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg", 
-                    ids: "17,21,22,26,27,31", 
+/*
+count: 6,
+                    hash: "3ba7bbfc03e3bed23bf066e2e9a6a5389dd33fd8637bc0220d9e6d642ccf5946",
+                    paths: "/Users/sysadmin/Pictures/test/欧洲4_副本.jpeg,/Users/s…4.jpeg,/Users/sysadmin/Pictures/test/欧洲4_副本5.jpeg",
+                    ids: "17,21,22,26,27,31",
                     times: "1718613803964,1718613804035,1718613804041,1718613804070,1718613804080,1718613804112"
 */
 type DuplicateFileInfo = {
@@ -347,30 +330,32 @@ export async function searchDuplicateFile({
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    /* 
-    select * from search_files where sourceId = $1 in (select sourceId from search_files group by hash having count(hash) > 1)
- */
-    // const res = await DB.select("SELECT * from search_files WHERE sourceId = $1", [sourceId]);
     const res: DuplicateFileInfo[] = await DB.select(
-      `SELECT hash,
-       sourceId,
-       GROUP_CONCAT(id)    AS ids,
-       COUNT(*)           AS count
-FROM search_files
-WHERE sourceId = $1
-  AND hash IS NOT NULL  
-  AND hash != "''"
-  AND hash != ""
-GROUP BY hash, sourceId
-HAVING COUNT(*) > 1
+      `SELECT
+    s.hash,
+    s.sourceId,
+    s.id,
+    s.creation_time,
+    s.modified_time,
+    s.file_size,
+    s.type,
+    s.name,
+    s.path,
+    GROUP_CONCAT(s.id) AS ids,
+    COUNT(*) AS count
+FROM search_files s
+LEFT JOIN duplicate_files d ON s.hash = d.hash
+WHERE s.sourceId = $1
+  AND s.hash IS NOT NULL
+  AND s.hash != ''
+  AND d.hash IS NULL
+GROUP BY s.hash, s.sourceId
+HAVING COUNT(*) > 1;
 `,
-/* ORDER BY [creation_time] ASC
-LIMIT $3 OFFSET ($2 - 1) * $3; */
-      [sourceId, page, pageSize]
+      [sourceId, page, pageSize],
     );
     return Promise.resolve([true, res]);
   } catch (err) {
-    // console.log(145, err);
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
       return Promise.resolve([false, "当前路径重复"]);
     }
@@ -379,7 +364,7 @@ LIMIT $3 OFFSET ($2 - 1) * $3; */
 }
 
 export default async function get_progress_by_sourceId(
-  sourceId: string
+  sourceId: string,
 ): Promise<any> {
   const DB = await Database.load(`sqlite:files_${sourceId}.db`);
   // 创建表
@@ -391,7 +376,7 @@ export default async function get_progress_by_sourceId(
     COUNT(CASE WHEN sourceId = $1 THEN 1 ELSE NULL END) AS sourceId_count,
     COUNT(CASE WHEN hash IS NULL OR hash = '' THEN 1 ELSE NULL END) AS hash_null_count
 FROM search_files;`,
-    [sourceId]
+    [sourceId],
   );
 
   return res;
@@ -400,7 +385,7 @@ FROM search_files;`,
 export async function updateFileHsah(
   path?: string,
   hash?: string,
-  sourceId?: string
+  sourceId?: string,
 ) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
@@ -414,11 +399,10 @@ export async function updateFileHsah(
         hash,
         path, // 假设 path 变量是预定义的
         sourceId,
-      ]
+      ],
     );
     return false;
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
@@ -426,15 +410,18 @@ export async function updateFileHsah(
   }
 }
 
-
-export async function get_fileInfo_by_id(id: string, sourceId: string) {
+export async function get_fileInfo_by_id(
+  id: string,
+  sourceId: string | undefined,
+) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    const res = await DB.select("SELECT * FROM search_files WHERE id = $1 and sourceId = $2", [
-      id, sourceId
-    ]);
+    const res = await DB.select(
+      "SELECT * FROM search_files WHERE id = $1 and sourceId = $2",
+      [id, sourceId],
+    );
     if (Array.isArray(res)) {
       return [res[0], ""];
     }
@@ -447,15 +434,15 @@ export async function get_fileInfo_by_id(id: string, sourceId: string) {
   }
 }
 
-
 export async function get_fileInfo_by_path(path: string, sourceId: string) {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    const res = await DB.select("SELECT * FROM search_files WHERE path = $1 and sourceId = $2", [
-      path, sourceId
-    ]);
+    const res = await DB.select(
+      "SELECT * FROM search_files WHERE path = $1 and sourceId = $2",
+      [path, sourceId],
+    );
     if (Array.isArray(res) && res.length) {
       return [res[0], ""];
     }
@@ -478,14 +465,260 @@ export async function del_file_by_id(path: string, sourceId: string) {
       [
         path, // 假设 path 变量是预定义的
         sourceId,
-      ]
+      ],
     );
     return Promise.resolve(false);
   } catch (error) {
-    console.log(595959, error);
     if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
       return "当前数据格式异常";
     }
     return Promise.resolve(error);
+  }
+}
+
+/*
+ * 这个函数是获取到第一个hash为空的数据*/
+export async function getFirstEmptyHashBySourceId(sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    const res = await DB.select(
+      `SELECT * FROM search_files
+WHERE hash = '' OR hash IS NULL
+LIMIT 1;`,
+      [sourceId],
+    );
+    if (Array.isArray(res) && res.length) {
+      return Promise.resolve([res[0], ""]);
+    }
+    return Promise.resolve([false, "暂无数据"]);
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return Promise.resolve([false, error]);
+  }
+}
+
+/**
+ * 重复文件数据
+ * */
+export async function setDuplicateFile(
+  sourceId: string,
+  {
+    path,
+    type,
+    name,
+    hash,
+    creation_time,
+    modified_time,
+    file_size,
+    ids,
+    idsNum,
+  }: insertSearchFilesPasamsType,
+) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.duplicate_files);
+    await DB.execute(
+      `
+        INSERT into duplicate_files 
+          (create_time, sourceId, name, type, path, hash, creation_time, modified_time, file_size, db_version, ids, idsNum) 
+        VALUES 
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `,
+      [
+        new Date().getTime(),
+        sourceId,
+        name,
+        type,
+        path,
+        hash,
+        creation_time,
+        modified_time,
+        file_size,
+        "1",
+        ids,
+        idsNum,
+      ],
+    );
+    return Promise.resolve([true, ""]);
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return Promise.resolve([false, error]);
+  }
+}
+/**
+ * 按照分页数据请求重复文件列表内容
+ * @param page 当前请求的页码，代表用户想要访问的数据页。
+ * @param pageSize 每页展示的记录数量，决定了每次查询返回的数据条数。
+ * @returns 返回一个对象，其中包含两个属性：
+ *          - data: FileInfoType[] - 当前页的记录数据数组。
+ *          - total: number - 表中的总记录数，用于前端计算总页数。
+ * */
+export async function getDuplicateFile({
+  page,
+  pageSize,
+  sourceId,
+}: {
+  page: number;
+  pageSize: number;
+  sourceId: string;
+  sorterOrder?: string;
+  sorterColumnKey?: string;
+}): Promise<{
+  [x: string]: any;
+  data: insertSearchFilesPasamsType[];
+  total: number;
+}> {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.duplicate_files);
+    // 查询总记录数
+    const totalResult = await DB.select(
+      "SELECT COUNT(*) AS total FROM duplicate_files",
+    );
+    const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
+    // 计算分页偏移量
+    const offset = (page - 1 || 1 - 1) * (pageSize || 10);
+    // 获取当前页的数据
+    const data = await DB.select(
+      "SELECT * FROM duplicate_files LIMIT ? OFFSET ?",
+      [pageSize, offset],
+    );
+    return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
+  } catch (error) {
+    return { data: [], total: 0 };
+  }
+}
+
+/*
+代码解释：
+多字段搜索：通过遍历 searchParams.keywords 对象，为每个指定的字段添加模糊搜索条件。
+多字段排序：searchParams.sorters 是一个包含多个排序规则的数组，这些规则被转换为 SQL ORDER BY 子句的一部分。
+参数化查询：继续使用参数化查询以防止 SQL 注入，并确保查询的安全性和效率。
+这种方式为你的应用提供了更灵活的数据检索方式，使其能够根据多个字段进行搜索和排序。
+
+
+以下是一个调用上述 `getDuplicateFiles` 函数的示例，该示例演示如何根据多个字段进行搜索和排序。在这个示例中，我们假设你正在查找包含特定关键字的文件名称或路径，并希望结果先按文件大小降序排列，然后按创建时间升序排列。
+
+### 示例调用
+
+假设你正在编写一个前端界面或服务端处理请求的脚本，这里是如何设置参数并调用函数的：
+
+```javascript
+async function fetchData() {
+  // 设置分页参数
+  const page = 1;
+  const pageSize = 10;
+
+  // 设置搜索和排序参数
+  const searchParams = {
+    sourceId: '123', // 假设的 sourceId
+    keywords: {
+      name: 'report', // 搜索文件名包含 'report'
+      path: '2024'    // 搜索路径包含 '2024'
+    },
+    sorters: [
+      { column: 'file_size', order: 'DESC' }, // 按文件大小降序
+      { column: 'create_time', order: 'ASC' } // 按创建时间升序
+    ]
+  };
+
+  // 调用函数获取数据
+  try {
+    const result = await getDuplicateFiles({ page, pageSize, searchParams });
+  } catch (error) {
+    console.error('Error fetching duplicate files:', error);
+  }
+}
+
+// 执行函数
+fetchData();
+```
+
+### 函数行为说明：
+
+- **分页**：查询第一页数据，每页显示10条记录。
+- **搜索条件**：
+  - 在 `name` 字段中搜索包含 "report" 的记录。
+  - 在 `path` 字段中搜索包含 "2024" 的记录。
+- **排序条件**：
+  - 首先按 `file_size` 字段降序排列，确保较大的文件先显示。
+  - 然后按 `create_time` 字段升序排列，较早创建的文件在相同大小的情况下先显示。
+
+这个示例充分展示了如何在实际应用中使用灵活的查询功能，满足复杂的数据检索需求。
+
+*/
+type SearchParam = {
+  sourceId: string;
+  keywords: { [key: string]: string }; // key: 字段名称, value: 搜索关键词
+  sorters: { column: string; order: "ASC" | "DESC" }[]; // 排序数组
+};
+
+interface FetchParams {
+  page: number;
+  pageSize: number;
+  searchParams: SearchParam;
+  table_name?: "select_history" | "search_files" | "duplicate_files";
+}
+
+export async function getDuplicateFiles_v2({
+  page,
+  pageSize,
+  searchParams,
+  table_name = "duplicate_files",
+}: FetchParams): Promise<{
+  data: FileInfoType[];
+  total: number;
+}> {
+  try {
+    const DB = await Database.load(`sqlite:files_${searchParams.sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql[table_name]);
+    // 动态构建查询条件
+    const conditions: string[] = [];
+    const params: unknown[] | undefined = [];
+    // 处理多字段搜索
+    Object.keys(searchParams.keywords).forEach((field) => {
+      if (searchParams.keywords[field]) {
+        conditions.push(`${field} LIKE '%${searchParams.keywords[field]}%' `);
+      }
+    });
+    // 计算分页偏移量
+    const offset = page * pageSize;
+    // 动态构建排序条件
+    const orderByClauses = searchParams.sorters
+      .map((sorter) => `${sorter.column} ${sorter.order}`)
+      .join(", ");
+    const orderBy = orderByClauses ? `ORDER BY ${orderByClauses}` : "";
+    // 查询总记录数（考虑搜索条件）
+    const totalQuery = `SELECT COUNT(*) AS total FROM ${table_name} ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""}`;
+    const totalResult = await DB.select(totalQuery, params);
+    const total = Array.isArray(totalResult) && totalResult[0].total; // 获取总记录数
+    // 获取当前页的数据
+    const dataQuery = `SELECT * FROM ${table_name} ${conditions.length ? "WHERE " + conditions.join(" AND ") : ""} ${orderBy} LIMIT ? OFFSET ?`;
+    params.push(pageSize, offset);
+    const data = await DB.select(dataQuery, params);
+    return { data: Array.isArray(data) ? data : [], total }; // 返回包含数据和总记录数的对象
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return { data: [], total: 0 };
+  }
+}
+
+export async function duplicateFilesDBInit(sourceId: string) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    await DB.execute(createSql.duplicate_files);
+  } catch (error) {
+    console.log(error);
   }
 }
