@@ -722,3 +722,9 @@ export async function duplicateFilesDBInit(sourceId: string) {
     console.log(error);
   }
 }
+
+
+export async function closeDB(sourceId: string) {
+  const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+  await DB.close();
+}

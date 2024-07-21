@@ -68,5 +68,5 @@ export type fileInfoParamsType = {
   path?: string;
   checked_size_values?: string[];
   types?: any[];
-  excluded_file_names?: number;
+  excluded_file_names?: string[];
 };

@@ -22,6 +22,7 @@ import type { FixedType } from "rc-table/lib/interface";
 import FileInfoEditer from "./FileInfoEditer";
 import { FileInfoType } from "@/types/files";
 import {
+  closeDB,
   delSelectedFileHistory,
   get_all_history,
   get_info_by_path,
@@ -164,6 +165,7 @@ export default function DuplicateFile() {
   async function delRow(row: FileInfoType) {
     // 删除对应的查询数据库的文件
     const appDataDirPath = await appDataDir();
+    await closeDB(`${row.id}`);
     const dbPath = `${appDataDirPath}/files_${row.id}.db`;
     const dbShmPath = `${appDataDirPath}/files_${row.id}.db-shm`;
     const dbWalPath = `${appDataDirPath}/files_${row.id}.db-wal`;
