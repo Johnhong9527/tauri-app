@@ -36,6 +36,10 @@ export default function Menu() {
           label: "文件管理",
           path: "/",
         },
+        {
+          label: "chat",
+          path: "/chat",
+        },
       ],
     },
     {

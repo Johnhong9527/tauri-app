@@ -71,4 +71,10 @@ export default ({
       calculateFn({ title: "管理文件", isCallBack: false }),
     ]);
   }
+  // 聊天 的面包屑配置
+  if (/^\/chat/.test(location.pathname)) {
+    setPlaceholder([
+      calculateFn({ title: "chat", isCallBack: false }),
+    ]);
+  }
 };

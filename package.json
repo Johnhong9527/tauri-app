@@ -15,10 +15,13 @@
     "@ant-design/icons": "^5.3.7",
     "@tauri-apps/api": "^1.5.6",
     "antd": "^5.17.4",
+    "axios": "*",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.11",
+    "qs": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",
     "tauri-plugin-sql-api": "https://gitee.com/seamong/tauri-plugin-sql.git#v1"

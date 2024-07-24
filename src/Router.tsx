@@ -21,10 +21,12 @@ import DuplicateFileInfo from "@/pages/DuplicateFile/FileInfo";
 import CalculateListPage from "@/pages/DuplicateFile/CalculateListPage";
 import ManageDuplicateFiles from "@/pages/DuplicateFile/ManageDuplicateFiles";
 import FilesManage from "@/pages/DuplicateFile/FilesManage";
+import ChatPage from "@/pages/Chat/Chat";
 
 /* 收藏夹管理 */
 import BookmarksIndex from "@/pages/Bookmarks/List";
 import BookmarksList from "@/pages/Bookmarks/List";
+import Chat from "@/pages/Chat/Chat";
 /* export default function Router() {
   return (
     <Routes>
@@ -109,6 +111,10 @@ const router = createBrowserRouter(
           path: "file-clear",
           element: <FileClear />,
         },
+        {
+          path: "chat",
+          element: <ChatPage />,
+        }
         // {
         //   path: "duplicate-file",
         //   element: <DuplicateFileIndex />,
