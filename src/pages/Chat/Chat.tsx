@@ -45,46 +45,29 @@ export default function Chat() {
   }
 
   async function getText() {
-
     setLoading(true)
     const _messages = [...messages]
-
     const res = await getChat({
-      // glm4 gemma2 llama3.1
-      // "model": "gemma2",
       "model": useModels,
       "messages": [
         ...messages,
         {
           "role": "user",
-          "content": `以中文返回 ${inputText}`
+          "content": `翻译这段文字 ${inputText}`
         }
       ],
       "stream": false
     })
-    console.log(393939, res)
     _messages.push(
       {
         "role": "user",
         "content": `${inputText}`
       }
     )
-    // const setMessages
-    console.log(29, res.data);
     setAssistantMsg(res.data.message);
     _messages.push(res.data.message)
-    /* _messages.push({
-       ...res.data.message,
-       content: await unified()
-         .use(remarkParse)
-         .use(remarkGfm)
-         .use(remarkRehype)
-         .use(rehypeStringify)
-         .process(res.data.message.content)
-     });*/
-    console.log(43, _messages);
     setMessages(_messages)
-    clearText()
+    setInputText('')
     setLoading(false)
     /*if (res && res?.data) {
         const messageData = qs.parse(res.data)
@@ -96,6 +79,7 @@ export default function Chat() {
 
   function clearText() {
     setInputText('')
+    setMessages([])
   }
 
   function modelChange(e: any) {
