@@ -53,7 +53,7 @@ export default function Chat() {
         ...messages,
         {
           "role": "user",
-          "content": `翻译这段文字 ${inputText}`
+          "content": ` 翻译成中文,保留代码结构: ${inputText}`
         }
       ],
       "stream": false
@@ -120,7 +120,7 @@ export default function Chat() {
                         const {children, className, node, ...rest} = props
                         const match = /language-(\w+)/.exec(className || '')
                         return match ? (
-                          <div style={{position: 'relative'}}>
+                          <div style={{position: 'relative', width: '94%'}}>
                             <CopyToClipboard text={String(children).replace(/\n$/, '')}>
                               {/*<Button
 
