@@ -147,6 +147,7 @@ export default function FilesManage() {
     setRemoveList([]);
     const [isError, searchDuplicateFileRes] = await searchDuplicateFile({
       sourceId: `${fileId}`,
+      type: ''
     });
     if (!isError) {
       typeof searchDuplicateFileRes === "string" &&

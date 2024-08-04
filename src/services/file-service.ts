@@ -319,10 +319,10 @@ type SearchResult = [boolean, DuplicateFileInfo[] | string | unknown];
 
 export async function searchDuplicateFile({
   sourceId,
-  type
+  type = ''
 }: {
   sourceId: string;
-  type: string
+  type?: string
 }): Promise<any> {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
