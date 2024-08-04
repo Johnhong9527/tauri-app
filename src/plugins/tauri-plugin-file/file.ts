@@ -56,6 +56,11 @@ export class File {
       destDir
     });
   }
+  static async isHave(filePath: string): Promise<string> {
+    return await invoke<string>("plugin:st-files|file_exists", {
+      filePath
+    });
+  }
 
   // async close(): Promise<boolean> {
   //     return await invoke('plugin:st-sqlite|close', { path: this.path })

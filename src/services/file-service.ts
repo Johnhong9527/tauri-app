@@ -319,13 +319,11 @@ type SearchResult = [boolean, DuplicateFileInfo[] | string | unknown];
 
 export async function searchDuplicateFile({
   sourceId,
-  page = 1,
-  pageSize = 1000,
+  type
 }: {
   sourceId: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<SearchResult> {
+  type: string
+}): Promise<any> {
   try {
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
@@ -344,7 +342,7 @@ export async function searchDuplicateFile({
     GROUP_CONCAT(s.id) AS ids,
     COUNT(*) AS count
 FROM search_files s
-LEFT JOIN duplicate_files d ON s.hash = d.hash
+LEFT JOIN duplicate_files d ON s.hash = d.hash ${type === 'reset' && "AND (',' || d.ids || ',' NOT LIKE '%,' || s.id || ',%')"}
 WHERE s.sourceId = $1
   AND s.hash IS NOT NULL
   AND s.hash != ''
@@ -352,8 +350,11 @@ WHERE s.sourceId = $1
 GROUP BY s.hash, s.sourceId
 HAVING COUNT(*) > 1;
 `,
-      [sourceId, page, pageSize],
+// AND (',' || d.ids || ',' NOT LIKE '%,' || s.id || ',%')
+      [sourceId],
     );
+    console.log(353, res);
+    
     return Promise.resolve([true, res]);
   } catch (err) {
     if (err && `${err}`.indexOf("UNIQUE constraint failed") > -1) {
@@ -422,7 +423,7 @@ export async function get_fileInfo_by_id(
       "SELECT * FROM search_files WHERE id = $1 and sourceId = $2",
       [id, sourceId],
     );
-    if (Array.isArray(res)) {
+    if (Array.isArray(res) && res.length) {
       return [res[0], ""];
     }
     return [false, "暂无数据"];
@@ -457,10 +458,11 @@ export async function get_fileInfo_by_path(path: string, sourceId: string) {
 
 export async function del_file_by_id(path: string, sourceId: string) {
   try {
+    console.log('删除的 path', path)
     const DB = await Database.load(`sqlite:files_${sourceId}.db`);
     // 创建表
     await DB.execute(createSql.search_files);
-    await DB.execute(
+    const res = await DB.execute(
       `DELETE FROM search_files WHERE path = $1 and sourceId = $2`,
       [
         path, // 假设 path 变量是预定义的
@@ -727,4 +729,76 @@ export async function duplicateFilesDBInit(sourceId: string) {
 export async function closeDB(sourceId: string) {
   const DB = await Database.load(`sqlite:files_${sourceId}.db`);
   await DB.close();
+}
+
+
+
+
+export async function getDuplicateFilesInfo(sourceId: string, id: string) {
+  try {
+    console.log(`getDuplicateFilesInfo::: ${sourceId} __ ${id}`);
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.duplicate_files);
+
+    const res = await DB.select(
+        "SELECT * FROM duplicate_files WHERE id = $1",
+        [id],
+    );
+    if (Array.isArray(res)) {
+      return [res[0], ""];
+    }
+    return [false, "暂无数据"];
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return [false, "当前路径重复"];
+    }
+    return [false, `${error}`];
+  }
+}
+
+export async function updateDuplicateFilesInfo(
+    ids: string,
+    idsNum: number,
+    id: string,
+    sourceId?: string,
+) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 创建表
+    await DB.execute(createSql.search_files);
+    await DB.execute(
+        `UPDATE duplicate_files 
+             SET ids = $1, idsNum = $2
+             WHERE id = $3`,
+        [
+          ids,
+          idsNum,
+          id,
+        ],
+    );
+    return false;
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return error;
+  }
+}
+
+
+export async function resetDuplicateFiles(
+  sourceId?: string,
+) {
+  try {
+    const DB = await Database.load(`sqlite:files_${sourceId}.db`);
+    // 删除表中的所有数据
+    await DB.execute(`DELETE FROM duplicate_files`);
+    return false;
+  } catch (error) {
+    if (error && `${error}`.indexOf("UNIQUE constraint failed") > -1) {
+      return "当前数据格式异常";
+    }
+    return error;
+  }
 }

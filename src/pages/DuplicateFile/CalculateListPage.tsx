@@ -10,28 +10,29 @@ import {
   InputRef,
   Spin,
 } from "antd";
-import React, { useEffect, useState, useRef } from "react";
-import { SearchOutlined, FolderOpenOutlined } from "@ant-design/icons";
+import React, {useEffect, useState, useRef} from "react";
+import {SearchOutlined, FolderOpenOutlined} from "@ant-design/icons";
 import {
   message as tauriMessage,
   save as dialogSave,
   open as dialogOpen,
 } from "@tauri-apps/api/dialog";
-import { insertSearchFilesPasamsType } from "@/types/files";
+import {insertSearchFilesPasamsType} from "@/types/files";
 import dayjs from "dayjs";
-import { useParams } from "react-router";
-import { useLocation } from "react-router-dom";
-import { homeDir } from "@tauri-apps/api/path";
+import {useParams} from "react-router";
+import {useLocation} from "react-router-dom";
+import {homeDir} from "@tauri-apps/api/path";
 import File from "@/plugins/tauri-plugin-file/file";
-import { CopyText } from "@/components/Table/CopyText";
-import { formatFileSize } from "@/utils";
+import {CopyText} from "@/components/Table/CopyText";
+import {formatFileSize} from "@/utils";
 import styles from "./CalculateListPage.module.less";
 import {
   del_file_by_id,
   get_fileInfo_by_id,
   searchDuplicateFile,
   setDuplicateFile,
-  getDuplicateFiles_v2,
+  getDuplicateFiles_v2, getDuplicateFilesInfo, updateDuplicateFilesInfo, get_fileInfo_by_path,
+  resetDuplicateFiles,
 } from "@/services";
 
 type KeywordsType<T> = {
@@ -39,7 +40,7 @@ type KeywordsType<T> = {
 };
 
 export default function CalculateListPage() {
-  let { fileId } = useParams();
+  let {fileId} = useParams();
   const location = useLocation();
   const searchInput = useRef<InputRef>(null as any);
   const [data, setData] = useState<FileItem[]>([]);
@@ -55,8 +56,10 @@ export default function CalculateListPage() {
   const [isCancelled, setIsCancelled] = useState(false); // 离开页面时终止正在执行的逻辑
   const [hasMounted, setHasMounted] = useState(false);
   const [spinTip, setSpinTip] = useState("");
+  const [userSelectedRows, setUserSelectedRows] = useState<any>([]);
   //
   const [settimeStart, setSettimeStart] = useState<NodeJS.Timeout>();
+
   interface FileItem {
     sourceId: number;
     ids: string;
@@ -68,18 +71,19 @@ export default function CalculateListPage() {
   }
 
   useEffect(() => {
-    appendData();
+    // appendData();
   }, []);
 
   useEffect(() => {
-    if (hasMounted) {
+    /*if (hasMounted) {
       getFileList();
     } else {
       const startTime: NodeJS.Timeout = setTimeout(() => {
         getFileList();
       }, 5000);
       setSettimeStart(startTime);
-    }
+    }*/
+    getFileList();
   }, [page, pageSize, sorterColumnKey, sorterOrder]);
 
   useEffect(() => {
@@ -102,7 +106,8 @@ export default function CalculateListPage() {
   function stopStartFn() {
     clearTimeout(settimeStart);
   }
-  async function getFileList() {
+
+  async function getFileList(line?: string) {
     stopStartFn();
     setLoading(true);
     try {
@@ -135,7 +140,7 @@ export default function CalculateListPage() {
       const newData = await processFiles(res.data, fileId);
 
       setTimeout(() => {
-        console.log(100, newData);
+        // console.log(100, newData);
         setData(newData);
         setSpinTip("");
         setLoading(false);
@@ -157,15 +162,15 @@ export default function CalculateListPage() {
     }
     const results = [];
     for (const file of data) {
+      const ids = file.ids.split(",");
       const otherItems = await Promise.allSettled(
-        file.ids
-          .split(",")
+        ids
           .filter((elm: any, index: any) => index)
           .map((id: string) => get_fileInfo_by_id(id, fileId)),
       );
       results.push({
         ...file,
-        key: file.id,
+        key: `${file.id}_${ids[0]}`,
         children: (otherItems as any[])
           .filter(
             (result: any) => result.status === "fulfilled" && !result.value[1],
@@ -180,19 +185,27 @@ export default function CalculateListPage() {
     return results;
   }
 
-  const appendData = async () => {
+  const appendData = async (type?: string) => {
+    if(type === 'reset') {
+      await resetDuplicateFiles(`${fileId}`)
+    }
     setLoading(true);
     setRemoveList([]);
     const [isError, searchDuplicateFileRes] = await searchDuplicateFile({
       sourceId: `${fileId}`,
+      type: `${type}`
     });
-    if (!isError) {
+    /* if (!isError) {
       typeof searchDuplicateFileRes === "string" &&
-        (await tauriMessage(searchDuplicateFileRes, {
-          title: "查询失败",
-          type: "error",
-        }));
-    }
+      (await tauriMessage(searchDuplicateFileRes, {
+        title: "查询失败",
+        type: "error",
+      }));
+    } */
+    /* console.log(206,  !searchDuplicateFileRes ||
+      !Array.isArray(searchDuplicateFileRes) ||
+      !searchDuplicateFileRes.length);
+    
     if (
       !searchDuplicateFileRes ||
       !Array.isArray(searchDuplicateFileRes) ||
@@ -202,7 +215,7 @@ export default function CalculateListPage() {
       await getFileList();
       setLoading(false);
       return;
-    }
+    } */
     /**
      * count: 2
      * hash: "fdd8051fcf884d8cc9a095cd77a58694e13b066aea68dc1fc353767ab0ebfe01"
@@ -210,6 +223,9 @@ export default function CalculateListPage() {
      * sourceId: 6
      * */
     setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 3000);
     let index = -1;
     await searchDuplicateFileRes.reduce(
       async (prevPromise: any, currentFile: any) => {
@@ -221,7 +237,6 @@ export default function CalculateListPage() {
         ) {
           // @ts-ignore
           throw "提前终止";
-          return Promise.resolve(0);
         } // 如果设置了取消标志，则提前终止
         index++;
         const ids = currentFile.ids.split(",");
@@ -234,7 +249,7 @@ export default function CalculateListPage() {
             idsNum: ids.length,
           });
         } catch (err) {
-          console.log(199, err);
+          console.log(199, err); 
         }
         setSpinTip(
           `进度: ${Math.floor((index / searchDuplicateFileRes.length) * 100)}% / 剩余 ${searchDuplicateFileRes.length - index} 个文件`,
@@ -263,26 +278,19 @@ export default function CalculateListPage() {
     setLoading(true);
     const filesRes = await Promise.allSettled(
       removeList.map((path) => File.rmFile(path)),
+      /* removeList.map((path) => Promise.resolve({
+        code: 200,
+        msg: 'File successfully moved to trash.',
+        data: path
+      })), */
     );
-    if (removeList.length === 1) {
-      if (
-        filesRes[0].status === "fulfilled" &&
-        (filesRes[0] as any).value.code === 200
-      ) {
-        setRemoveList([]);
-        await del_file_by_id(removeList[0], `${fileId}`);
-        message.success(`${removeList[0]} 删除成功!`);
-        await appendData();
-        return;
+    const rmSuccess = filesRes.map((res) => {
+      if (res.status === "fulfilled" && res.value.code === 200) {
+        return res.value.data
       }
-      await tauriMessage(removeList[0], {
-        title: "删除失败",
-        type: "error",
-      });
-    }
-    const rmSuccess = filesRes.filter((res) => {
-      return res.status === "fulfilled" && res.value.code === 200;
-    });
+      return false
+    }).filter(res => res);
+    console.log(299, rmSuccess)
     if (rmSuccess.length) {
       await rmSuccess.reduce(async (prevPromise: any, item: any) => {
         await prevPromise;
@@ -293,13 +301,28 @@ export default function CalculateListPage() {
           // @ts-ignore
           throw "提前终止";
           return Promise.resolve(0);
-        } // 如果设置了取消标志，则提前终止
-        return del_file_by_id(item.value.data, `${fileId}`);
+        }
+        // 如果设置了取消标志，则提前终止
+        // 删除 duplicate_files 中的数据, 先找到
+        const idInfoIndex = userSelectedRows.findIndex((elm: any) => elm.path === item);
+        if (idInfoIndex > -1) {
+          const idInfo = userSelectedRows[idInfoIndex];
+          if (`${idInfo.key}`.indexOf('_') > -1) {
+            const [id, sourceId] = idInfo.key.split('_');
+            const [row] = await getDuplicateFilesInfo(`${fileId}`, id);
+            const [fileInfo_by_path] = await get_fileInfo_by_path(item, `${fileId}`)
+            const ids = row.ids.split(',').filter((i: any) => Number.parseInt(i) !== Number.parseInt(fileInfo_by_path.id));
+            await del_file_by_id(item, `${fileId}`);
+            await updateDuplicateFilesInfo(ids.toString(), ids.length, id, `${fileId}`);
+          }
+        }
+        return Promise.resolve()
       }, Promise.resolve());
       message.success(
         `${rmSuccess.length}个文件删除成功! ${filesRes.length - rmSuccess.length}个文件删除失败!`,
       );
-      await appendData();
+      // await appendData();
+      getFileList()
       await waittime(1500);
       setLoading(false);
       return;
@@ -360,29 +383,29 @@ export default function CalculateListPage() {
 
   const getColumnSearchProps = (dataIndex: string, dataIndexName: string) => ({
     filterDropdown: () => (
-      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+      <div style={{padding: 8}} onKeyDown={(e) => e.stopPropagation()}>
         <Input
           ref={searchInput}
           placeholder={`搜索${dataIndexName}`}
           value={searchText[dataIndex]}
           onChange={(e) => handleSearch(dataIndex, e.target.value)}
           onPressEnter={() => getFileList()}
-          style={{ marginBottom: 8, display: "block" }}
+          style={{marginBottom: 8, display: "block"}}
         />
         <Space>
           <Button
             type="primary"
-            icon={<SearchOutlined />}
+            icon={<SearchOutlined/>}
             size="small"
             onClick={() => getFileList()}
-            style={{ width: 90 }}
+            style={{width: 90}}
           >
             搜索
           </Button>
           <Button
             size="small"
             onClick={() => handleSearchReset(dataIndex)}
-            style={{ width: 90 }}
+            style={{width: 90}}
           >
             重置
           </Button>
@@ -435,6 +458,7 @@ export default function CalculateListPage() {
       dataIndex: "idsNum",
       key: "idsNum",
       sorter: true,
+      width: '200px'
     },
     {
       title: "文件大小",
@@ -508,6 +532,11 @@ export default function CalculateListPage() {
         selectedRows,
       );
       setUserSelectedRowKeys(selectedRowKeys);
+      setUserSelectedRows(selectedRows);
+      setRemoveList(selectedRows.map((elm: any) => {
+        // console.log(514, );
+        return elm.path
+      }))
     },
     onSelect: (record: any, selected: any, selectedRows: any) => {
       console.log("onSelect", record, selected, selectedRows);
@@ -557,7 +586,7 @@ export default function CalculateListPage() {
           [sorter.columnKey]: sorter.order === "ascend" ? "ASC" : "DESC",
         });
       } else {
-        const _sorterColumnKey = { ...sorterColumnKey };
+        const _sorterColumnKey = {...sorterColumnKey};
         delete _sorterColumnKey[sorter.columnKey];
         setSorterColumnKey({
           ..._sorterColumnKey,
@@ -570,11 +599,17 @@ export default function CalculateListPage() {
     <Spin spinning={loading} tip={spinTip}>
       <div className={styles.CalculateListPage}>
         <Space>
+          <Button type="primary" onClick={() => appendData()}>
+            开始
+          </Button>
+          <Button type="primary" onClick={() => appendData('reset')}>
+            重置
+          </Button>
           <Button type="primary" danger onClick={() => removeFilesByDB()}>
-            删除选中的文件
+            删除文件
           </Button>
           <Button type="primary" onClick={() => openDialogSave()}>
-            统一移动到指定目录
+            迁移文件
           </Button>
           {!loading && spinTip && <div>{spinTip}</div>}
           {/*<Button type="primary">导出</Button>*/}
@@ -590,7 +625,7 @@ export default function CalculateListPage() {
             current: page,
             showQuickJumper: true,
           }}
-          rowSelection={{ ...rowSelection }}
+          rowSelection={{...rowSelection}}
           expandable={{
             defaultExpandAllRows: false,
           }}

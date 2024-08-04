@@ -19,8 +19,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             get_app_data_dir,
             // open_finder
             show_file_in_explorer,
-            move_specific_files
+            move_specific_files,
             // get_file_info_by_path,
+            file_exists
         ])
         .setup(|_app| {
             // app.manage(SqliteMap::default());

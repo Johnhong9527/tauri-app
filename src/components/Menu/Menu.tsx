@@ -13,7 +13,7 @@ export default function Menu() {
   }, []);
 
   async function initMenu() {
-    console.log(141414, location);
+    // console.log(141414, location);
 
     // const config = LogicalSize;
     // console.log({ LogicalSize: new LogicalSize() });

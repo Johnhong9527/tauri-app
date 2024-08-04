@@ -382,3 +382,8 @@ pub fn show_file_in_explorer(file_path: String) -> RequestMvFile {
         },
     }
 }
+
+#[command]
+pub fn file_exists(file_path: &str) -> bool {
+    Path::new(file_path).exists()
+}

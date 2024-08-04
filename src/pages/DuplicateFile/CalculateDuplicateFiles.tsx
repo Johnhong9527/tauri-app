@@ -50,9 +50,6 @@ export default function CalculateDuplicateFiles() {
     // 这段代码只会在组件首次挂载时执行一次
     console.log("组件已挂载");
 
-    // console.log(location); // 当前路由路径
-    // console.log(location.pathname); // 当前路由路径
-
     setTimeout(() => {
       // 设置一个状态标志，表示组件已经挂载
       setHasMounted(true);
@@ -104,7 +101,7 @@ export default function CalculateDuplicateFiles() {
       const files = await scanAllFilesInDir();
 
       // 计算文件属性
-      console.log("计算文件属性 开始");
+      console.log("计算文件属性 开始", files);
       await computeFileMetadata_v2(files);
       console.log("计算文件属性 结束");
 
@@ -148,7 +145,8 @@ export default function CalculateDuplicateFiles() {
   // 扫描目录文件
   async function scanAllFilesInDir(): Promise<backFileInfoType[]> {
     const [progressRes] = await get_progress_by_sourceId(`${fileId}`);
-    if (progressRes.total_entries !== fileInfo.files || !fileInfo.files) {
+    console.log(148, progressRes, fileInfo);
+    if (progressRes.total_entries !== fileInfo.files || !fileInfo.files || (progressRes.hash_null_count && progressRes.total_entries) ) {
       console.log("扫描目录文件 开始");
       setStepsStatus({
         ...stepsStatus,
@@ -177,6 +175,7 @@ export default function CalculateDuplicateFiles() {
    * */
   async function computeFileMetadata_v2(files: backFileInfoType[]) {
     const [progressRes] = await get_progress_by_sourceId(`${fileId}`);
+    console.log(176, files, progressRes);
     // if (!files.length || (!progressRes.total_entries && !progressRes.hash_null_count)) {
     if (!files.length || progressRes.hash_null_count) {
       setStepsStatus({
@@ -203,6 +202,12 @@ export default function CalculateDuplicateFiles() {
       fileIndex++;
       const file_info = files[fileIndex];
       setPercent(Math.floor((fileIndex / allFilesLength) * 100));
+      // 如果已经存在数据库中，跳过记录
+      const [pathInfo] = await get_fileInfo_by_path(`${file_info.file_path}`, `${fileId}`);
+      if( pathInfo?.name ) {
+        return Promise.resolve(0);
+      }
+      console.log(208, pathInfo);
       return insertSearchFiles({
         // 组装数据
         sourceId: `${fileId}`,
@@ -222,9 +227,8 @@ export default function CalculateDuplicateFiles() {
   // 计算每一个文件的hash
   async function computeFileChecksums_2() {
     const [progressRes] = await get_progress_by_sourceId(`${fileId}`);
-
     // 已经存在的数据中，计算过的 hash 总量跟 文件总数不是一样的，并且存在有记录的文件
-    if (progressRes.hash_null_count && progressRes.total_entries) {
+    if (progressRes.hash_null_count && progressRes.total_entries || (!progressRes.hash_null_count && progressRes.total_entries > 0)) {
       let fileIndex = -1;
       let allFilesLength = progressRes.hash_null_count;
       const allList = [...Array(allFilesLength).keys()];
@@ -238,32 +242,44 @@ export default function CalculateDuplicateFiles() {
       await allList.reduce(async (prevPromise: any, index: number) => {
         // 等待上一个 Promise 完成
         await prevPromise;
-        if (
-          isCancelled ||
-          window.location.href.indexOf(location.pathname) < 0
-        ) {
-          // @ts-ignore
-          throw "提前终止";
-          return Promise.resolve(0);
-        } // 如果设置了取消标志，则提前终止
-        const [fileinfo, error] = await getFirstEmptyHashBySourceId(
-          `${fileId}`,
-        );
-        // && fileinfo.file_size / 1024 / 1024 / 1024 < 1 ||
-        if (fileinfo) {
-          // 获取文件类型和哈希
-          const hash = await File.getHash(fileinfo.path);
-          await updateFileHsah(fileinfo.path, hash, `${fileId}`);
+        try {
+          if (
+            isCancelled ||
+            window.location.href.indexOf(location.pathname) < 0
+          ) {
+            // @ts-ignore
+            throw "提前终止";
+            return Promise.resolve(0);
+          } // 如果设置了取消标志，则提前终止
+          const [fileinfo, error] = await getFirstEmptyHashBySourceId(
+            `${fileId}`,
+          );
+          const isHave = await File.isHave(fileinfo.path)
+                // 如果已经存在数据库中，跳过记录
+          const [pathInfo] = await get_fileInfo_by_path(`${fileinfo.file_path}`, `${fileId}`);
+          if( pathInfo?.hash ) {
+            return Promise.resolve(0);
+          }
+          // && fileinfo.file_size / 1024 / 1024 / 1024 < 1 ||
+          if (fileinfo && isHave) {
+            // 获取文件类型和哈希
+            const hash = await File.getHash(fileinfo.path);
+            await updateFileHsah(fileinfo.path, hash, `${fileId}`);
+          }
+          fileIndex++;
+          // await waittime();
+          const [newProgressRes] = await get_progress_by_sourceId(`${fileId}`);
+          setPercent(
+            Math.floor((fileIndex / newProgressRes.hash_null_count) * 100),
+          );
+          
+          setDuplicateFilesStep(
+            `: ${fileIndex} / ${newProgressRes.hash_null_count}`,
+          );
+          console.log(263, `: ${fileIndex} / ${newProgressRes.hash_null_count}`,)
+        } catch (err ) {
+          console.log('computeFileChecksums_2',err)
         }
-        fileIndex++;
-        // await waittime();
-        const [newProgressRes] = await get_progress_by_sourceId(`${fileId}`);
-        setPercent(
-          Math.floor((fileIndex / newProgressRes.hash_null_count) * 100),
-        );
-        setDuplicateFilesStep(
-          `: ${fileIndex} / ${newProgressRes.hash_null_count}`,
-        );
         return Promise.resolve(0);
       }, Promise.resolve(0));
       setDuplicateFilesStep('');
