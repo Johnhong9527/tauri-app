@@ -77,4 +77,11 @@ export default ({
       calculateFn({ title: "chat", isCallBack: false }),
     ]);
   }
+
+  // 书签 的面包屑配置
+  if (/^\/bookmarks/.test(location.pathname)) {
+    setPlaceholder([
+      calculateFn({ title: "Bookmark管理器", isCallBack: false }),
+    ]);
+  }
 };

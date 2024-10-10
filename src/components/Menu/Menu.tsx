@@ -13,12 +13,17 @@ export default function Menu() {
   }, []);
 
   async function initMenu() {
-    // console.log(141414, location);
-
-    // const config = LogicalSize;
-    // console.log({ LogicalSize: new LogicalSize() });
-    // console.log(window);
-    // setHeight(await window);
+    function getActive(arr) {
+      arr.forEach(item => {
+        if(item.hasOwnProperty('path') && (item.path.includes(location.pathname) || item.path === location.pathname ) && !active) {
+          setActive(item.label); 
+        }
+        if(item.hasOwnProperty('child') && !active) {
+          getActive(item.child)
+        }
+      })
+    }
+    getActive(menuConfig)
   }
   const menuConfig = [
     {
@@ -39,6 +44,10 @@ export default function Menu() {
         {
           label: "chat",
           path: "/chat",
+        },
+        {
+          label: "Bookmark管理器",
+          path: "/bookmarksList",
         },
       ],
     },
@@ -65,7 +74,7 @@ export default function Menu() {
   }
   return (
     <div className={clsx(styles.box, styles.parent)}>
-      <div className={styles.logoBox}>占位符:</div>
+      <div className={styles.logoBox}>Logo:</div>
       {menuConfig.map((item) => (
         <div className={styles.menuBox} key={item.label}>
           <div className={styles.label}>{item.label}</div>

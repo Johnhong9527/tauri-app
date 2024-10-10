@@ -43,4 +43,19 @@ export const createSql = {
         idsNum INTEGER,
         UNIQUE (hash)
     );`,
+  bookmarks: `CREATE TABLE IF NOT EXISTS bookmarks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        create_time TIMESTAMP,
+        ADD_DATE TIMESTAMP,
+        LAST_MODIFIED TIMESTAMP,
+        label TEXT,
+        type TEXT,
+        PERSONAL_TOOLBAR_FOLDER  TEXT,
+        ICON TEXT,
+        name TEXT,
+        HREF TEXT,
+        hash TEXT,
+        level INTEGER,
+        parent_id INTEGER,
+    );`,
 };
