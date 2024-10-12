@@ -61,3 +61,8 @@ https://github.com/launchbadge/sqlx
 ## 问题解答
 - 问题1.macOS 无法使用本软件, 移除macOS系统对指定软件的安全验证
 - 问题1解答: sudo xattr -dr com.apple.quarantine /Applications/<本软件名称>
+
+
+
+## 设计规则
+- [微软](https://learn.microsoft.com/zh-cn/power-platform/well-architected/experience-optimization/principles)

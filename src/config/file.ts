@@ -1,4 +1,5 @@
 export const FILE_DB_PATH = 'files.db'
+export const BOOKMARKS_DB_PATH = 'bookmarks.db'
 
 
 

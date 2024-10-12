@@ -1,5 +1,5 @@
 use tauri_plugin_sql::{
-    Migration, 
+    Migration, MigrationKind, 
     // MigrationKind
 };
 

@@ -24,6 +24,10 @@ fn main() {
                     "sqlite:files.db",
                     files_servics::migrations::set_files_migrations(),
                 )
+                .add_migrations(
+                    "sqlite:bookmarks.db",
+                    files_servics::bookmarks::set_bookmarks_migrations(),
+                )
                 .build(),
         )
         .menu(use_memu())

@@ -8,4 +8,18 @@
     width: 80vw;
     margin: 10vh auto 100px;
   }
+  /* 右击菜单 */
+  .nodeContextMenuDom {
+    position: fixed;
+    width: 300px;
+    min-width: 200px;
+    background-color: aqua;
+    z-index: 2;
+  }
+  /* 移动到别的目录下 */
+  :global(.ant-table-body) {
+    position: relative;
+    height: calc(100vh - 280px);
+    flex: 1;
+  }
 }

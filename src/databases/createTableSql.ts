@@ -43,6 +43,14 @@ export const createSql = {
         idsNum INTEGER,
         UNIQUE (hash)
     );`,
+  bookmarks_history: `CREATE TABLE IF NOT EXISTS bookmarks_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        create_time TIMESTAMP,
+        last_modified TIMESTAMP,
+        source_text TEXT,
+        type TEXT,
+        name TEXT
+    );`,
   bookmarks: `CREATE TABLE IF NOT EXISTS bookmarks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         create_time TIMESTAMP,

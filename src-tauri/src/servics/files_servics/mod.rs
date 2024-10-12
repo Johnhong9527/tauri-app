@@ -1,6 +1,7 @@
 // pub(crate) mod files_servics;
 
 pub mod migrations; // 定义数据库迁移模块
+pub mod bookmarks; // 定义数据库迁移模块
 use tauri::{
     plugin::{Builder, TauriPlugin}, Runtime,
 };
